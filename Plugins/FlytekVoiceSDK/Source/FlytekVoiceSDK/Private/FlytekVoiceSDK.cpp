@@ -49,7 +49,7 @@ void FFlytekVoiceSDKModule::StartupModule()
 	}
 	else
 	{
-		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("ThirdPartyLibraryError", "Failed to load vr platform sdk third party library"));
+		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("ThirdPartyLibraryError", "Failed to load voice sdk third party library"));
 	}
 	VoiceSDKLogin(FString(), FString(), LoginParams);
 }
