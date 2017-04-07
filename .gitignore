@@ -582,7 +582,11 @@ __pycache__/
 
 #UE4 Binaries
 
-Binaries/
+!Binaries/
+
+Binaries/*
+
+!Binaries/ThirdParty/
 
 
 #UE4 DerivedDataCache

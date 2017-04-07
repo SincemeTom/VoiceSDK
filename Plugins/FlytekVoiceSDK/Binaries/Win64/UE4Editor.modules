@@ -1,0 +1,8 @@
+{
+	"Changelist" : 3299760,
+	"BuildId" : "baa00655-d259-4d79-ac8e-a903b76f3dec",
+	"Modules" : 
+	{
+		"FlytekVoiceSDK" : "UE4Editor-FlytekVoiceSDK.dll"
+	}
+}
