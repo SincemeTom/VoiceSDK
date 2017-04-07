@@ -6,7 +6,7 @@ public class VoiceSDK : ModuleRules
 {
 	public VoiceSDK(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "FlytekVoiceSDK" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
