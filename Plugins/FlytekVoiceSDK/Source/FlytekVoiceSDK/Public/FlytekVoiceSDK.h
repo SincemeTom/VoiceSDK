@@ -42,7 +42,7 @@ public:
 		return FModuleManager::Get().IsModuleLoaded("FlytekVoiceSDK");
 	}
 	//int MSPAPI MSPLogin(const char* usr, const char* pwd, const char* params);
-	virtual int32 VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params) = 0;
+	virtual void VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params) = 0;
 };
 class FFlytekVoiceSDKModule : public IFlytekVoiceSDK
 {
@@ -53,6 +53,7 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
-	virtual int32 VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params) override;
-
+	virtual void VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params) override;
+private:
+	void* DllHandle;
 };
