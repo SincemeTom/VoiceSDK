@@ -50,6 +50,8 @@ extern "C" {
 
 /* must init before start . devid = -1, then the default device will be used.
 devid will be ignored if the aud_src is not SR_MIC */
+int sr_login(const char* usr, const char* pwd, const char* params);
+int sr_logout();
 int sr_init(struct speech_rec * sr, const char * session_begin_params, enum sr_audsrc aud_src, int devid, struct speech_rec_notifier * notifier);
 int sr_start_listening(struct speech_rec *sr);
 int sr_stop_listening(struct speech_rec *sr);

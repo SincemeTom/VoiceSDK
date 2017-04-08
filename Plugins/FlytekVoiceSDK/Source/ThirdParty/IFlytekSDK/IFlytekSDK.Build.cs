@@ -25,17 +25,17 @@ public class IFlytekSDK : ModuleRules
             string IFlytekSDKDllPath = System.IO.Path.Combine(BasePath, IFlytekSDKDllName);
 
             RuntimeDependencies.Add(new RuntimeDependency(IFlytekSDKDllPath));
-
+            
             // Add the import library
             PublicLibraryPaths.Add(Path.Combine(ModuleDirectory, "lib"));
             PublicAdditionalLibraries.Add("iat_record_sample.lib");
 
             string IFlytekrecordSDKDllName = "iat_record_sample.dll";
             // Delay-load the DLL, so we can load it from the right place first
-            PublicDelayLoadDLLs.Add(IFlytekSDKDllName);
+            PublicDelayLoadDLLs.Add(IFlytekrecordSDKDllName);
 
             string RecordBasePath = System.IO.Path.Combine(ModuleDirectory, "../../../Binaries/ThirdParty/IFlytekSDK", "Win64");
-            string IFlytekrecordSDKDllPath = System.IO.Path.Combine(BasePath, IFlytekrecordSDKDllName);
+            string IFlytekrecordSDKDllPath = System.IO.Path.Combine(RecordBasePath, IFlytekrecordSDKDllName);
 
             RuntimeDependencies.Add(new RuntimeDependency(IFlytekrecordSDKDllPath));
         }

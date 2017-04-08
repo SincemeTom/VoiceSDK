@@ -588,7 +588,7 @@ Binaries/*
 
 !Binaries/ThirdParty/
 
-Plugins\FlytekVoiceSDK\Binaries\Win64
+Plugins/FlytekVoiceSDK/Binaries/Win64
 
 #UE4 DerivedDataCache
 
@@ -603,5 +603,6 @@ Intermediate/
 #UE4 Saved
 
 Saved/
+
 
 

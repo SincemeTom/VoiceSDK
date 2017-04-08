@@ -6,8 +6,8 @@
 #include "IPluginManager.h"
 #include "WindowsPlatformProcess.h"
 #include "MessageDialog.h"
-#include "msp_cmn.h"
-#include "qisr.h"
+#include "speech_recognizer.h"
+
 
 #define LOCTEXT_NAMESPACE "FFlytekVoiceSDKModule"
 
@@ -27,7 +27,7 @@ void FFlytekVoiceSDKModule::StartupModule()
 	{
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("%s"), TEXT("Module Started"));
 	}
-
+#if 1
 	// Get the base directory of this plugin
 	FString BaseDir = IPluginManager::Get().FindPlugin("FlytekVoiceSDK")->GetBaseDir();
 
@@ -41,7 +41,7 @@ void FFlytekVoiceSDKModule::StartupModule()
 #endif
 #endif
 
-	DllHandle = !LibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*LibraryPath) : nullptr;
+	/*DllHandle = !LibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*LibraryPath) : nullptr;
 
 	if (DllHandle)
 	{
@@ -51,7 +51,32 @@ void FFlytekVoiceSDKModule::StartupModule()
 	{
 		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("ThirdPartyLibraryError", "Failed to load voice sdk third party library"));
 	}
-	VoiceSDKLogin(FString(), FString(), LoginParams);
+	*/
+
+	// Add on the relative location of the third party dll and load it
+	FString DllLibraryPath;
+#if PLATFORM_WINDOWS
+#if PLATFORM_64BITS
+	
+	DllLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/iat_record_sample.dll"));
+#else
+	DllLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/iat_record_sample.dll"));
+#endif
+#endif
+
+	DllHandle = !LibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*LibraryPath) : nullptr;
+
+	if (DllHandle)
+	{
+		// Call the test function in the third party library that opens a message box
+	}
+	else
+	{
+		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("ThirdPartyLibraryError", "Failed to load iat_record_sample third party library"));
+	}
+
+#endif	
+	//VoiceSDKLogin(FString(), FString(), LoginParams);
 }
 
 void FFlytekVoiceSDKModule::ShutdownModule()
@@ -66,7 +91,8 @@ void FFlytekVoiceSDKModule::ShutdownModule()
 void FFlytekVoiceSDKModule::VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
 	//TCHAR_TO_ANSI
-	auto Result = MSPLogin(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*Params));
+	
+	auto Result = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*Params));
 	if (Result == 0)
 	{
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogin Successful ! "))
