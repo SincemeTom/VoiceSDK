@@ -27,7 +27,7 @@ public class IFlytekSDK : ModuleRules
             RuntimeDependencies.Add(new RuntimeDependency(IFlytekSDKDllPath));
             
             // Add the import library
-            PublicLibraryPaths.Add(Path.Combine(ModuleDirectory, "lib"));
+          /*  PublicLibraryPaths.Add(Path.Combine(ModuleDirectory, "lib"));
             PublicAdditionalLibraries.Add("iat_record_sample.lib");
 
             string IFlytekrecordSDKDllName = "iat_record_sample.dll";
@@ -38,6 +38,7 @@ public class IFlytekSDK : ModuleRules
             string IFlytekrecordSDKDllPath = System.IO.Path.Combine(RecordBasePath, IFlytekrecordSDKDllName);
 
             RuntimeDependencies.Add(new RuntimeDependency(IFlytekrecordSDKDllPath));
+            */
         }
         else if (Target.Platform == UnrealTargetPlatform.Win32)
 		{

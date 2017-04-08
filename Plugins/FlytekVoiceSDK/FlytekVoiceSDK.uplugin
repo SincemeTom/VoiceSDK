@@ -5,20 +5,22 @@
 	"FriendlyName": "FlytekVoiceSDK",
 	"Description": "",
 	"Category": "Other",
-	"CreatedBy": "Michael",
+	"CreatedBy": "Tom",
 	"CreatedByURL": "https://www.7663.com",
 	"DocsURL": "https://www.7663.com",
 	"MarketplaceURL": "",
 	"SupportURL": "https://www.7663.com",
+	"EnabledByDefault" : false,
 	"CanContainContent": false,
 	"IsBetaVersion": false,
-	"Installed": true,
+	"Installed": false,
 	"Modules": [
 		{
 			"Name": "FlytekVoiceSDK",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PreDefault",
+			"WhitelistPlatforms" : [ "Win64" ]
 		}
-	],
-	"RequiresBuildPlatform": false
+	]
 }
+			
