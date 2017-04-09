@@ -240,7 +240,9 @@ void FFlytekVoiceSDKModule::OnSpeechRecResult(const char* result, char is_last)
 		CallbackResult.Broadcast(SpeechResultStr);
 		if (is_last)
 		{
+			bSpeeking = false;
 			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Last words"), *SpeechResultStr)
+				
 		}
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking String :[%s]"), *SpeechResultStr)
 	}
