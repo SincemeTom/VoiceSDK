@@ -7,36 +7,13 @@
 #include "speech_recognizer.h"
 
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FSpeechRecognizeResultDelegate, const FString&);
+
+
 struct speech_rec;
 struct speech_rec_notifier;
 DECLARE_LOG_CATEGORY_EXTERN(LogFlytekVoiceSDK, Verbose, All);
-/*
-enum EAuasrc
-{
-	SR_MIC,
-	SR_USER
-};
 
-USTRUCT()
-struct FSpeechRec
-{
-	GENERATED_USTRUCT_BODY()
-public:
-
-
-
-	UPROPERTY()
-		FString SessionID;
-	UPROPERTY()
-		int32 EPStat;
-	UPROPERTY()
-		int32 RecStat;
-	UPROPERTY()
-		int32 AudioStatus;
-	UPROPERTY()
-		FString SessionBeginParams;
-};
-*/
 class IFlytekVoiceSDK : public IModuleInterface
 {
 
@@ -79,9 +56,9 @@ public:
 
 	virtual int32 SpeechRecInit() = 0;
 
-	virtual int32 SpeechRecStartListening() = 0;
+	virtual void SpeechRecStartListening() = 0;
 
-	virtual int32 SpeechRecStopListening() = 0;
+	virtual void SpeechRecStopListening() = 0;
 
 	virtual void SpeechRecUninit() = 0;
 
@@ -102,7 +79,8 @@ public:
 	// must call uninit after you don't use it 
 	void sr_uninit(struct speech_rec * sr);
 	*/
-	
+public:
+	FSpeechRecognizeResultDelegate CallbackResult;
 };
 class FFlytekVoiceSDKModule : public IFlytekVoiceSDK
 {
@@ -119,9 +97,9 @@ public:
 
 	virtual int32 SpeechRecInit() override;
 
-	virtual int32 SpeechRecStartListening() override;
+	virtual void SpeechRecStartListening() override;
 
-	virtual int32 SpeechRecStopListening() override;
+	virtual void SpeechRecStopListening() override;
 
 	virtual void SpeechRecUninit() override;
 
@@ -134,5 +112,7 @@ private:
 	void* DllHandle;
 	struct speech_rec SpeechRec;
 	struct speech_rec_notifier RecNotifier;
+	bool bLoginSuccessful;
+	bool bInitSuccessful;
 	bool bSpeeking;
 };
