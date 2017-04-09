@@ -16,5 +16,11 @@ class FLYTEKVOICESDK_API USpeekRecognizerFunctionLibrary : public UBlueprintFunc
 public:
 	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
 	static void MSRLogin(const FString& Params);
+
+	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
+	static void StartLisening();
+
+	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
+	static void StopLisening();
 	
 };

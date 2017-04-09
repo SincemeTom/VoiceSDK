@@ -4,12 +4,39 @@
 
 #include "ModuleManager.h"
 #include "ModuleInterface.h"
+#include "speech_recognizer.h"
 
+
+struct speech_rec;
+struct speech_rec_notifier;
 DECLARE_LOG_CATEGORY_EXTERN(LogFlytekVoiceSDK, Verbose, All);
+/*
+enum EAuasrc
+{
+	SR_MIC,
+	SR_USER
+};
+
+USTRUCT()
+struct FSpeechRec
+{
+	GENERATED_USTRUCT_BODY()
+public:
 
 
 
-
+	UPROPERTY()
+		FString SessionID;
+	UPROPERTY()
+		int32 EPStat;
+	UPROPERTY()
+		int32 RecStat;
+	UPROPERTY()
+		int32 AudioStatus;
+	UPROPERTY()
+		FString SessionBeginParams;
+};
+*/
 class IFlytekVoiceSDK : public IModuleInterface
 {
 
@@ -48,7 +75,34 @@ public:
 	*/
 	virtual void VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params) = 0;
 
-	//const char* MSPAPI QISRSessionBegin(const char* grammarList, const char* params, int* errorCode);
+	virtual void VoiceSDKLogout() = 0;
+
+	virtual int32 SpeechRecInit() = 0;
+
+	virtual int32 SpeechRecStartListening() = 0;
+
+	virtual int32 SpeechRecStopListening() = 0;
+
+	virtual void SpeechRecUninit() = 0;
+
+	virtual int32 SpeechRecWriteAudioData() = 0;
+
+
+	virtual void OnSpeechRecResult(const char* result, char is_last) = 0;
+	virtual void OnSpeechRecBegin() = 0;
+	virtual void OnSpeechRecEnd(int reason) = 0;
+
+	/*
+	int sr_logout();
+	int sr_init(struct speech_rec * sr, const char * session_begin_params, enum sr_audsrc aud_src, int devid, struct speech_rec_notifier * notifier);
+	int sr_start_listening(struct speech_rec *sr);
+	int sr_stop_listening(struct speech_rec *sr);
+	// only used for the manual write way. 
+	int sr_write_audio_data(struct speech_rec *sr, char *data, unsigned int len);
+	// must call uninit after you don't use it 
+	void sr_uninit(struct speech_rec * sr);
+	*/
+	
 };
 class FFlytekVoiceSDKModule : public IFlytekVoiceSDK
 {
@@ -60,6 +114,25 @@ public:
 	virtual void ShutdownModule() override;
 
 	virtual void VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params) override;
+
+	virtual void VoiceSDKLogout() override;
+
+	virtual int32 SpeechRecInit() override;
+
+	virtual int32 SpeechRecStartListening() override;
+
+	virtual int32 SpeechRecStopListening() override;
+
+	virtual void SpeechRecUninit() override;
+
+	virtual int32 SpeechRecWriteAudioData() override;
+
+	virtual void OnSpeechRecResult(const char* result, char is_last) override;
+	virtual void OnSpeechRecBegin() override;
+	virtual void OnSpeechRecEnd(int reason) override;
 private:
 	void* DllHandle;
+	struct speech_rec SpeechRec;
+	struct speech_rec_notifier RecNotifier;
+	bool bSpeeking;
 };
