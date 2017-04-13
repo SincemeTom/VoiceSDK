@@ -3,9 +3,11 @@
 
 #include "FlytekVoiceSDK.h"
 #include "Paths.h"
+#include "ThreadClass.h"
 #include "IPluginManager.h"
 #include "WindowsPlatformProcess.h"
 #include "MessageDialog.h"
+#include "SpeechRecognizer.h"
 //#include "speech_recognizer.h"
 
 
@@ -110,7 +112,7 @@ void FFlytekVoiceSDKModule::StartupModule()
 	}
 
 #endif	
-	VoiceSDKLogin(FString(), FString(), LoginParams);
+	/*VoiceSDKLogin(FString(), FString(), LoginParams);
 	if (bLoginSuccessful)
 	{
 		auto error = SpeechRecInit();
@@ -124,7 +126,8 @@ void FFlytekVoiceSDKModule::StartupModule()
 			bInitSuccessful = false;
 			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speech recognizer init faild ! ErrorCode : %d"), error)
 		}
-	}
+	}*/
+	
 }
 
 void FFlytekVoiceSDKModule::ShutdownModule()
@@ -134,15 +137,17 @@ void FFlytekVoiceSDKModule::ShutdownModule()
 		FPlatformProcess::FreeDllHandle(DllHandle);
 	}
 	DllHandle = nullptr;
-	SpeechRecUninit();
+	//SpeechRecUninit();
 	VoiceSDKLogout();
 
 }
 
 void FFlytekVoiceSDKModule::VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
+	USpeechRecognizer* SpeechRecObj = NewObject<USpeechRecognizer>();
+	SpeechRecObj->SpeechRecLoginRequest(FString(), FString(), LoginParams);
 	//TCHAR_TO_ANSI
-	
+	/*
 	auto Result = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*Params));
 	if (Result == 0)
 	{
@@ -153,7 +158,8 @@ void FFlytekVoiceSDKModule::VoiceSDKLogin(const FString& UserName, const FString
 	{
 		bLoginSuccessful = false;
 		UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogin Faild ! Error code : %d"), Result)
-	}
+	}*/
+	
 }
 void FFlytekVoiceSDKModule::VoiceSDKLogout()
 {
@@ -188,6 +194,8 @@ void FFlytekVoiceSDKModule::SpeechRecUninit()
 }
 void FFlytekVoiceSDKModule::SpeechRecStartListening()
 {
+//	ThreadManager::Create(this, &FFlytekVoiceSDKModule::StartListening, TEXT("StartListeningThread"));
+
 	if (bInitSuccessful)
 	{
 		int32 ErrorCode = sr_start_listening(&SpeechRec);
@@ -266,7 +274,10 @@ void FFlytekVoiceSDKModule::OnSpeechRecEnd(int reason)
 	}
 
 }
-
+void FFlytekVoiceSDKModule::StartListening()
+{
+	//return sr_start_listening(&SpeechRec);
+}
 
 #undef LOCTEXT_NAMESPACE
 	

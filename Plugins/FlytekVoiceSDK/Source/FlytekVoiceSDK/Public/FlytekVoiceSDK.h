@@ -108,6 +108,8 @@ public:
 	virtual void OnSpeechRecResult(const char* result, char is_last) override;
 	virtual void OnSpeechRecBegin() override;
 	virtual void OnSpeechRecEnd(int reason) override;
+
+	virtual void StartListening();
 private:
 	void* DllHandle;
 	struct speech_rec SpeechRec;
