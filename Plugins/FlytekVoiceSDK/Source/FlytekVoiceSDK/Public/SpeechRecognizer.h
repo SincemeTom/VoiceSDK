@@ -29,6 +29,13 @@ public:
 
 	void SpeechRecInitRequest();
 
+	void SpeechRecUninitRequest();
+
+	void SpeechRecStartListeningRequest();
+
+	void SpeechRecStopListeningRequest();
+
+
 	void OnSpeechRecResult(const char* result, char is_last);
 
 	void OnSpeechRecBegin();
@@ -43,6 +50,12 @@ private:
 	void CallSRLogout();
 
 	void CallSRInit();
+
+	void CallSRUninit();
+
+	void CallSRStartListening();
+
+	void CallSRStopListening();
 
 	//CallBack
 	void HandleOnLoginResult();

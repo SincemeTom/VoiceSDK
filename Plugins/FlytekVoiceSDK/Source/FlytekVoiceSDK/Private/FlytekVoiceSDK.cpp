@@ -127,7 +127,7 @@ void FFlytekVoiceSDKModule::StartupModule()
 			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speech recognizer init faild ! ErrorCode : %d"), error)
 		}
 	}*/
-	
+	USpeechRecognizer* SpeechRecObj = NewObject<USpeechRecognizer>();
 }
 
 void FFlytekVoiceSDKModule::ShutdownModule()
@@ -138,13 +138,13 @@ void FFlytekVoiceSDKModule::ShutdownModule()
 	}
 	DllHandle = nullptr;
 	//SpeechRecUninit();
-	VoiceSDKLogout();
+	//VoiceSDKLogout();
 
 }
 
 void FFlytekVoiceSDKModule::VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
-	USpeechRecognizer* SpeechRecObj = NewObject<USpeechRecognizer>();
+	
 	SpeechRecObj->SpeechRecLoginRequest(FString(), FString(), LoginParams);
 	//TCHAR_TO_ANSI
 	/*

@@ -57,15 +57,6 @@ public:
 	}
 
 	template <typename T>
-	void InitLogoutThread(T *InObjectPtr, void(T::*InFuncPtr)(void), const FString& ThreadName, EThreadState InState) {
-
-		this->ObjectPtr = (UObject *)InObjectPtr;
-		this->LogoutFunctionPtr = (void(UObject::*)(void))InFuncPtr;
-		RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Lowest);
-		SetThreadState(InState);
-	}
-
-	template <typename T>
 	void InitSpeechInitThread(T *InObjectPtr, void(T::*InFuncPtr)(void), const FString& ThreadName, EThreadState InState) {
 
 		this->ObjectPtr = (UObject *)InObjectPtr;
@@ -74,12 +65,12 @@ public:
 		SetThreadState(InState);
 	}
 
+
 	void Reset()
 	{
 		SetThreadState(ES_NULL);
 		ObjectPtr = nullptr;
 		InitFunctionPtr = nullptr;
-		LogoutFunctionPtr = nullptr;
 		LoginFunctionPtr = nullptr;
 		RunnableThread = nullptr;
 	}
@@ -92,7 +83,6 @@ private:
 	EThreadState State = ES_NULL;
 
 	void(UObject::*InitFunctionPtr)(void) = nullptr;
-	void(UObject::*LogoutFunctionPtr)(void) = nullptr;
 	int32(UObject::*LoginFunctionPtr)(const FString& UserName, const FString& Password, const FString& Params) = nullptr;
 	FString UserName;
 	FString Password;

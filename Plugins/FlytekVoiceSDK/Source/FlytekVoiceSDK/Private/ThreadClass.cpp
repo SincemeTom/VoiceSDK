@@ -18,9 +18,9 @@ uint32 FThreadClass::Run()
 	{
 		(this->ObjectPtr->*this->LoginFunctionPtr)(UserName, Password, Params);
 	}
-	if (LogoutFunctionPtr)
+	if (InitFunctionPtr)
 	{
-		(this->ObjectPtr->*this->LogoutFunctionPtr)();
+		(this->ObjectPtr->*this->InitFunctionPtr)();
 	}
 	return 0;
 }
