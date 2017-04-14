@@ -49,20 +49,24 @@ extern "C"
 USpeechRecognizer::USpeechRecognizer()
 {
 	pSpeechRecognizer = this;
+	bLoginSuccessful = false;
+	SpeechThread = new FThreadClass();
 }
 USpeechRecognizer::~USpeechRecognizer()
 {
-
+	SpeechThread->Exit();
+	SpeechThread = nullptr;
 }
 
 void USpeechRecognizer::Tick(float DeltaTime)
 {
-	FScopeLock ScopeLock1(&AccessLock);
+	//FScopeLock ScopeLock1(&AccessLock);
 
-	if (SpeechThread.IsValid())
+	if (SpeechThread)
 	{
 		if (ErrorResult != -1)
 		{
+			//FScopeLock ScopeLock1(&AccessLock);
 			switch (SpeechThread->GetThreadState())
 			{
 			case ES_NULL:
@@ -93,10 +97,12 @@ void USpeechRecognizer::Tick(float DeltaTime)
 			case ES_INIT:
 				if (ErrorResult == 0)
 				{
+					bInitSuccessful = true;
 					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK Init Successful ! "))
 				}
 				else
 				{
+					bInitSuccessful = false;
 					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDK Init Faild ! Error code : %d"), ErrorResult)
 				}
 				break;
@@ -143,7 +149,7 @@ TStatId USpeechRecognizer::GetStatId() const
 
 void USpeechRecognizer::HandleOnLoginResult()
 {
-
+	SpeechRecInitRequest();
 }
 void USpeechRecognizer::SpeechRecLoginRequest(const FString& UserName, const FString& Password, const FString& Params)
 {
@@ -152,7 +158,7 @@ void USpeechRecognizer::SpeechRecLoginRequest(const FString& UserName, const FSt
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK has already Login Successful ! "))
 		return;
 	}
-	if (SpeechThread.IsValid())
+	if (SpeechThread)
 	{
 		SpeechThread->Reset();
 		SpeechThread->InitLoginThread(this, &USpeechRecognizer::CallSRLogin, SPEECH_THREAD, UserName, Password, Params, ES_LOGIN);
@@ -160,7 +166,7 @@ void USpeechRecognizer::SpeechRecLoginRequest(const FString& UserName, const FSt
 	}
 	else
 	{
-		SpeechThread = MakeShareable(new FThreadClass(this, &USpeechRecognizer::CallSRLogin, SPEECH_THREAD, UserName, Password, Params, ES_LOGIN));
+		SpeechThread = new FThreadClass(this, &USpeechRecognizer::CallSRLogin, SPEECH_THREAD, UserName, Password, Params, ES_LOGIN);
 		SpeechThread->Run();
 	}
 	
@@ -169,7 +175,8 @@ void USpeechRecognizer::SpeechRecLoginRequest(const FString& UserName, const FSt
 
 void USpeechRecognizer::SpeechRecLogoutRequest()
 {
-	if (SpeechThread.IsValid())
+
+	if (SpeechThread)
 	{
 		SpeechThread->Reset();
 		SpeechThread->InitSpeechInitThread(this, &USpeechRecognizer::CallSRLogout, SPEECH_THREAD, ES_LOGOUT);
@@ -177,28 +184,28 @@ void USpeechRecognizer::SpeechRecLogoutRequest()
 	}
 	else
 	{
-		SpeechThread = MakeShareable(new FThreadClass(this, &USpeechRecognizer::CallSRLogout, SPEECH_THREAD, ES_LOGOUT));
+		SpeechThread = new FThreadClass(this, &USpeechRecognizer::CallSRLogout, SPEECH_THREAD, ES_LOGOUT);
 		SpeechThread->Run();
 	}
 }
 void USpeechRecognizer::SpeechRecInitRequest()
 {
-	if (SpeechThread.IsValid())
+	if (SpeechThread)
 	{
-		SpeechThread->Reset();
+		//SpeechThread->Reset();
 		SpeechThread->InitSpeechInitThread(this, &USpeechRecognizer::CallSRInit, SPEECH_THREAD, ES_INIT);
 		SpeechThread->Run();
 	}
 	else
 	{
-		SpeechThread = MakeShareable(new FThreadClass(this, &USpeechRecognizer::CallSRInit, SPEECH_THREAD, ES_INIT));
+		SpeechThread = new FThreadClass(this, &USpeechRecognizer::CallSRInit, SPEECH_THREAD, ES_INIT);
 		SpeechThread->Run();
 	}
 
 }
 void USpeechRecognizer::SpeechRecUninitRequest()
 {
-	if (SpeechThread.IsValid())
+	if (SpeechThread)
 	{
 		SpeechThread->Reset();
 		SpeechThread->InitSpeechInitThread(this, &USpeechRecognizer::CallSRUninit, SPEECH_THREAD, ES_UNINIT);
@@ -206,14 +213,14 @@ void USpeechRecognizer::SpeechRecUninitRequest()
 	}
 	else
 	{
-		SpeechThread = MakeShareable(new FThreadClass(this, &USpeechRecognizer::CallSRUninit, SPEECH_THREAD, ES_UNINIT));
+		SpeechThread =new FThreadClass(this, &USpeechRecognizer::CallSRUninit, SPEECH_THREAD, ES_UNINIT);
 		SpeechThread->Run();
 	}
 }
 
 void USpeechRecognizer::SpeechRecStartListeningRequest()
 {
-	if (SpeechThread.IsValid())
+	if (SpeechThread)
 	{
 		SpeechThread->Reset();
 		SpeechThread->InitSpeechInitThread(this, &USpeechRecognizer::CallSRStartListening, SPEECH_THREAD, ES_STARTLISTENING);
@@ -221,14 +228,14 @@ void USpeechRecognizer::SpeechRecStartListeningRequest()
 	}
 	else
 	{
-		SpeechThread = MakeShareable(new FThreadClass(this, &USpeechRecognizer::CallSRStartListening, SPEECH_THREAD, ES_STARTLISTENING));
+		SpeechThread = new FThreadClass(this, &USpeechRecognizer::CallSRStartListening, SPEECH_THREAD, ES_STARTLISTENING);
 		SpeechThread->Run();
 	}
 }
 
 void USpeechRecognizer::SpeechRecStopListeningRequest()
 {
-	if (SpeechThread.IsValid())
+	if (SpeechThread)
 	{
 		SpeechThread->Reset();
 		SpeechThread->InitSpeechInitThread(this, &USpeechRecognizer::CallSRStopListening, SPEECH_THREAD, ES_STOPLISTENING);
@@ -236,13 +243,13 @@ void USpeechRecognizer::SpeechRecStopListeningRequest()
 	}
 	else
 	{
-		SpeechThread = MakeShareable(new FThreadClass(this, &USpeechRecognizer::CallSRStopListening, SPEECH_THREAD, ES_STOPLISTENING));
+		SpeechThread = new FThreadClass(this, &USpeechRecognizer::CallSRStopListening, SPEECH_THREAD, ES_STOPLISTENING);
 		SpeechThread->Run();
 	}
 }
 int32 USpeechRecognizer::CallSRLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
-	FScopeLock ScopeLock(&AccessLock);
+	FScopeLock ScopeLock1(&AccessLock);
 	ErrorResult = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*Params));
 	return ErrorResult;
 }
@@ -261,6 +268,7 @@ void USpeechRecognizer::CallSRInit()
 		OnSpeechEndResult
 	};
 	ErrorResult = sr_init(&SpeechRec, TCHAR_TO_ANSI(*Session_Begin_Params), SR_MIC, DEFAULT_INPUT_DEVID, &RecNotifier);
+	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Init! Error Code :%d"), ErrorResult)
 }
 void USpeechRecognizer::CallSRUninit()
 {

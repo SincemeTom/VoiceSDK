@@ -111,7 +111,7 @@ public:
 
 	virtual void StartListening();
 private:
-	USpeechRecognizer* SpeechRecObj;
+	class USpeechRecognizer* SpeechRecPtr = nullptr;
 	void* DllHandle;
 	struct speech_rec SpeechRec;
 	struct speech_rec_notifier RecNotifier;

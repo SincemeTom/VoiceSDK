@@ -127,7 +127,6 @@ void FFlytekVoiceSDKModule::StartupModule()
 			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speech recognizer init faild ! ErrorCode : %d"), error)
 		}
 	}*/
-	USpeechRecognizer* SpeechRecObj = NewObject<USpeechRecognizer>();
 }
 
 void FFlytekVoiceSDKModule::ShutdownModule()
@@ -144,8 +143,16 @@ void FFlytekVoiceSDKModule::ShutdownModule()
 
 void FFlytekVoiceSDKModule::VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
+	if (SpeechRecPtr)
+	{
+		SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), LoginParams);
+	}
+	else
+	{
+		SpeechRecPtr = NewObject<USpeechRecognizer>();
+		SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), LoginParams);
+	}
 	
-	SpeechRecObj->SpeechRecLoginRequest(FString(), FString(), LoginParams);
 	//TCHAR_TO_ANSI
 	/*
 	auto Result = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*Params));
@@ -163,7 +170,13 @@ void FFlytekVoiceSDKModule::VoiceSDKLogin(const FString& UserName, const FString
 }
 void FFlytekVoiceSDKModule::VoiceSDKLogout()
 {
-	auto Result = sr_logout();
+
+
+	if (SpeechRecPtr)
+	{
+		SpeechRecPtr->SpeechRecLogoutRequest();
+	}
+	/*auto Result = sr_logout();
 	if (Result == 0)
 	{
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogout Successful ! "))
@@ -171,32 +184,46 @@ void FFlytekVoiceSDKModule::VoiceSDKLogout()
 	else
 	{
 		UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogout Faild ! Error code : %d"), Result)
-	}
+	}*/
 }
 
 int32 FFlytekVoiceSDKModule::SpeechRecInit()
 {
-	RecNotifier = {
+	if (SpeechRecPtr)
+	{
+		SpeechRecPtr->SpeechRecInitRequest();
+	}
+	/*RecNotifier = {
 		OnResult,
 		OnSpeechBegin,
 		OnSpeechEnd
 	};
 	int32 ErrorCode = sr_init(&SpeechRec, TCHAR_TO_ANSI(*Session_Begin_Params), SR_MIC, DEFAULT_INPUT_DEVID, &RecNotifier);
 	return ErrorCode;
+	*/
+	return 0;
 }
 void FFlytekVoiceSDKModule::SpeechRecUninit()
 {
-	if (bInitSuccessful)
+	if (SpeechRecPtr)
+	{
+		SpeechRecPtr->SpeechRecUninitRequest();
+	}
+
+	/*if (bInitSuccessful)
 	{
 		sr_uninit(&SpeechRec);
 	}
 	bInitSuccessful = false;
+	*/
 }
 void FFlytekVoiceSDKModule::SpeechRecStartListening()
 {
-//	ThreadManager::Create(this, &FFlytekVoiceSDKModule::StartListening, TEXT("StartListeningThread"));
-
-	if (bInitSuccessful)
+	if (SpeechRecPtr)
+	{
+		SpeechRecPtr->SpeechRecStartListeningRequest();
+	}
+	/*if (bInitSuccessful)
 	{
 		int32 ErrorCode = sr_start_listening(&SpeechRec);
 		if (ErrorCode == 0)
@@ -212,11 +239,16 @@ void FFlytekVoiceSDKModule::SpeechRecStartListening()
 	{
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speek Recognizer uninitialized"))
 	}
+	*/
 }
 
 void FFlytekVoiceSDKModule::SpeechRecStopListening()
 {
-	if (bInitSuccessful)
+	if (SpeechRecPtr)
+	{
+		SpeechRecPtr->SpeechRecStopListeningRequest();
+	}
+	/*if (bInitSuccessful)
 	{
 		int32 ErrorCode = sr_stop_listening(&SpeechRec);
 		if (ErrorCode == 0)
@@ -231,7 +263,7 @@ void FFlytekVoiceSDKModule::SpeechRecStopListening()
 	else
 	{
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speek Recognizer uninitialized"))
-	}
+	}*/
 }
 int32 FFlytekVoiceSDKModule::SpeechRecWriteAudioData()
 {

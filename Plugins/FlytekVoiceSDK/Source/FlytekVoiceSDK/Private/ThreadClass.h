@@ -27,15 +27,15 @@ public:
 	~FThreadClass();
 
 	template <typename T>
-	FThreadClass(T *InObjectPtr, void(T::*InFuncPtr)(void), const FString& ThreadName, EThreadState InState) {
+	FThreadClass(T *InObjectPtr, void(T::*InFuncPtr)(void), const FString& InThreadName, EThreadState InState) {
 
-		InitSpeechInitThread(InObjectPtr, InFuncPtr, ThreadName, InState);
+		InitSpeechInitThread(InObjectPtr, InFuncPtr, InThreadName, InState);
 	}
 
 	template <typename T>
 	FThreadClass(T *InObjectPtr, int32(T::*InFuncPtr)(const FString& UserName, const FString& Password, const FString& Params), const FString& ThreadName, const FString& InUserName, const FString& InPassword, const FString& InParams, EThreadState InState) {
 
-		InitLoginThread(InObjectPtr, InFuncPtr, InUserName, ThreadName, InPassword, InParams, InState);
+		InitLoginThread(InObjectPtr, InFuncPtr, ThreadName, InUserName, InPassword, InParams, InState);
 	}
 
 	virtual uint32 Run() override;
@@ -48,12 +48,15 @@ public:
 	void InitLoginThread(T *InObjectPtr, int32(T::*InFuncPtr)(const FString& UserName, const FString& Password, const FString& Params), const FString& ThreadName, const FString& InUserName, const FString& InPassword, const FString& InParams, EThreadState InState)
 	{
 		this->ObjectPtr = (UObject *)InObjectPtr;
-		this->LoginFunctionPtr = (int32(UObject::*)(const FString& UserName, const FString& Password, const FString& Params))InFuncPtr;
-		RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Lowest);
+		this->LoginFunctionPtr = (int32(UObject::*)(const FString& UserName, const FString& Password, const FString& Params))InFuncPtr;	
 		UserName = InUserName;
 		Password = InPassword;
 		Params = InParams;
 		SetThreadState(InState);
+		if (!RunnableThread)
+		{
+			RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Lowest);
+		}	
 	}
 
 	template <typename T>
@@ -61,18 +64,22 @@ public:
 
 		this->ObjectPtr = (UObject *)InObjectPtr;
 		this->InitFunctionPtr = (void(UObject::*)(void))InFuncPtr;
-		RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Lowest);
 		SetThreadState(InState);
+		if (!RunnableThread)
+		{
+			RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Lowest);
+		}	
 	}
 
 
 	void Reset()
 	{
+		//RunnableThread->Suspend()
 		SetThreadState(ES_NULL);
 		ObjectPtr = nullptr;
 		InitFunctionPtr = nullptr;
 		LoginFunctionPtr = nullptr;
-		RunnableThread = nullptr;
+		//RunnableThread = nullptr;
 	}
 	void SetThreadState(EThreadState InState) { State = InState; }
 	EThreadState GetThreadState() const { return State; }
