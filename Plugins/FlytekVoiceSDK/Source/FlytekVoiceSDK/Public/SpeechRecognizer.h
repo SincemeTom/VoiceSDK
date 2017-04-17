@@ -11,6 +11,18 @@
  * 
  */
 
+enum EThreadState
+{
+	ES_NULL,
+	ES_LOGIN,
+	ES_LOGOUT,
+	ES_INIT,
+	ES_UNINIT,
+	ES_STARTLISTENING,
+	ES_STOPLISTENING,
+	ES_MAXSTATE
+};
+
 UCLASS()
 class FLYTEKVOICESDK_API USpeechRecognizer : public UObject, public FTickableGameObject
 {
@@ -82,7 +94,7 @@ private:
 
 private:
 	FCriticalSection AccessLock;
-	int32 ErrorResult = -1;
+	int32 ErrorResult[EThreadState::ES_MAXSTATE];
 	struct speech_rec SpeechRec;
 	struct speech_rec_notifier RecNotifier;
 	bool bLoginSuccessful;

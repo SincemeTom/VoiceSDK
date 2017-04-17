@@ -1,23 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
+
+
 #include "Runnable.h"
 #include "RunnableThread.h"
+#include "SpeechRecognizer.h"
 /**
  * 
  */
 
 
-enum EThreadState
-{
-	ES_NULL,
-	ES_LOGIN,
-	ES_LOGOUT,
-	ES_INIT,
-	ES_UNINIT,
-	ES_STARTLISTENING,
-	ES_STOPLISTENING
-};
 
 class FThreadClass : public FRunnable
 {

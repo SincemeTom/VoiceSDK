@@ -18,6 +18,9 @@ public:
 	static void MSRLogin(const FString& Params);
 
 	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
+	static void MSRInit();
+
+	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
 	static void StartLisening();
 
 	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)

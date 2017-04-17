@@ -6,8 +6,7 @@
 #include "ScopeLock.h"
 
 
-//const FString LoginParams = TEXT("appid = 58d087b0, work_dir = .");
-//const FString Session_Begin_Params = TEXT("sub = iat, domain = iat, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8");
+const FString Session_Begin_Param = TEXT("sub = iat, domain = iat, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8");
 
 //DEFINE_LOG_CATEGORY(LogFlytekVoiceSDK);
 
@@ -48,6 +47,10 @@ extern "C"
 
 USpeechRecognizer::USpeechRecognizer()
 {
+	for (int32 i = 0; i <= ES_MAXSTATE; ++i)
+	{
+		ErrorResult[i] = -1;
+	}
 	pSpeechRecognizer = this;
 	bLoginSuccessful = false;
 	SpeechThread = new FThreadClass();
@@ -60,80 +63,84 @@ USpeechRecognizer::~USpeechRecognizer()
 
 void USpeechRecognizer::Tick(float DeltaTime)
 {
-	//FScopeLock ScopeLock1(&AccessLock);
-
+	FScopeLock ScopeLock1(&AccessLock);
 	if (SpeechThread)
 	{
-		if (ErrorResult != -1)
-		{
-			//FScopeLock ScopeLock1(&AccessLock);
-			switch (SpeechThread->GetThreadState())
-			{
-			case ES_NULL:
-				break;
-			case ES_LOGIN:
-				if (ErrorResult == 0)
+		//if (ErrorResult != -1)
+		//{
+			//switch (SpeechThread->GetThreadState())
+			//{
+			//case ES_NULL:
+			//	break;
+			//case ES_LOGIN:
+				if (ErrorResult[ES_LOGIN] == 0)
 				{
-					bLoginSuccessful = true;
-					HandleOnLoginResult();
 					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogin Successful ! "))
+					bLoginSuccessful = true;
+					HandleOnLoginResult();			
 				}
-				else
+				else if (ErrorResult[ES_LOGIN] != -1)
 				{
 					bLoginSuccessful = false;
-					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogin Faild ! Error code : %d"), ErrorResult)
-				}			
-				break;
-			case ES_LOGOUT:
-				if (ErrorResult == 0)
+					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogin Faild ! Error code : %d"), ErrorResult[ES_LOGIN])
+				}		
+				ErrorResult[ES_LOGIN] = -1;
+			//	break;
+		//	case ES_LOGOUT:
+				if (ErrorResult[ES_LOGOUT] == 0)
 				{
 					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogout Successful ! "))
 				}
-				else
+				else if (ErrorResult[ES_LOGOUT] != -1)
 				{
-					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogout Faild ! Error code : %d"), ErrorResult)
+					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogout Faild ! Error code : %d"), ErrorResult[ES_LOGOUT])
 				}
-				break;
-			case ES_INIT:
-				if (ErrorResult == 0)
+				ErrorResult[ES_LOGOUT] = -1;
+			//	break;
+			//case ES_INIT:
+				if (ErrorResult[ES_INIT] == 0)
 				{
-					bInitSuccessful = true;
 					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK Init Successful ! "))
+					bInitSuccessful = true;
+					
 				}
-				else
+				else if (ErrorResult[ES_INIT] != -1)
 				{
-					bInitSuccessful = false;
-					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDK Init Faild ! Error code : %d"), ErrorResult)
+					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDK Init Faild ! Error code : %d"), ErrorResult[ES_INIT])
+					bInitSuccessful = false;					
 				}
-				break;
-			case ES_UNINIT:		
-				break;
-			case ES_STARTLISTENING:
-				if (ErrorResult == 0)
+				ErrorResult[ES_INIT] = -1;
+			//	break;
+			//case ES_UNINIT:		
+			//	break;
+		//	case ES_STARTLISTENING:
+				if (ErrorResult[ES_STARTLISTENING] == 0)
 				{
 					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech!"))
 				}
-				else
+				else if (ErrorResult[ES_STARTLISTENING] != -1)
 				{
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech faild! Error Code :%d"), ErrorResult)
+					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech faild! Error Code :%d"), ErrorResult[ES_STARTLISTENING])
 				}
-				break;
-			case ES_STOPLISTENING:
-				if (ErrorResult == 0)
+				ErrorResult[ES_STARTLISTENING] = -1;
+			//	break;
+			//case ES_STOPLISTENING:
+				if (ErrorResult[ES_STOPLISTENING] == 0)
 				{
 					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Stop Speech!"))
 				}
-				else
+				else if(ErrorResult[ES_STOPLISTENING] != -1)
 				{
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Stop Speech faild! Error Code :%d"), ErrorResult)
+					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Stop Speech faild! Error Code :%d"), ErrorResult[ES_STOPLISTENING])
 				}
-				break;
-			default:
-				break;
-			}
-
-			ErrorResult = -1;
-		}
+				ErrorResult[ES_STOPLISTENING] = -1;
+			//	break;
+			//default:
+		//		break;
+			//}
+		//	SpeechThread->SetThreadState(ES_NULL);
+			
+		//}
 	}
 
 }
@@ -149,6 +156,7 @@ TStatId USpeechRecognizer::GetStatId() const
 
 void USpeechRecognizer::HandleOnLoginResult()
 {
+	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("OnLoginCallback ! "))
 	SpeechRecInitRequest();
 }
 void USpeechRecognizer::SpeechRecLoginRequest(const FString& UserName, const FString& Password, const FString& Params)
@@ -250,13 +258,13 @@ void USpeechRecognizer::SpeechRecStopListeningRequest()
 int32 USpeechRecognizer::CallSRLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
 	FScopeLock ScopeLock1(&AccessLock);
-	ErrorResult = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*Params));
-	return ErrorResult;
+	ErrorResult[ES_LOGIN] = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*Params));
+	return ErrorResult[ES_LOGIN];
 }
 void USpeechRecognizer::CallSRLogout()
 {
 	FScopeLock ScopeLock1(&AccessLock);
-	ErrorResult = sr_logout();
+	ErrorResult[ES_LOGOUT] = sr_logout();
 }
 
 void USpeechRecognizer::CallSRInit()
@@ -267,7 +275,7 @@ void USpeechRecognizer::CallSRInit()
 		OnSpeechBeginResult,
 		OnSpeechEndResult
 	};
-	ErrorResult = sr_init(&SpeechRec, TCHAR_TO_ANSI(*Session_Begin_Params), SR_MIC, DEFAULT_INPUT_DEVID, &RecNotifier);
+	ErrorResult[ES_INIT] = sr_init(&SpeechRec, TCHAR_TO_UTF8(*Session_Begin_Param), SR_MIC, DEFAULT_INPUT_DEVID, &RecNotifier);
 	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Init! Error Code :%d"), ErrorResult)
 }
 void USpeechRecognizer::CallSRUninit()
@@ -285,7 +293,7 @@ void USpeechRecognizer::CallSRStartListening()
 	FScopeLock ScopeLock1(&AccessLock);
 	if (bInitSuccessful)
 	{
-		int32 ErrorCode = sr_start_listening(&SpeechRec);
+		ErrorResult[ES_STARTLISTENING] = sr_start_listening(&SpeechRec);
 	}
 	else
 	{
@@ -298,7 +306,7 @@ void USpeechRecognizer::CallSRStopListening()
 	FScopeLock ScopeLock1(&AccessLock);
 	if (bInitSuccessful)
 	{
-		int32 ErrorCode = sr_stop_listening(&SpeechRec);
+		ErrorResult[ES_STOPLISTENING] = sr_stop_listening(&SpeechRec);
 	}
 	else
 	{

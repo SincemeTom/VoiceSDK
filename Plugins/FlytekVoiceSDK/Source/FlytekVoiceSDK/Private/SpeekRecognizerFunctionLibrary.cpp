@@ -10,7 +10,10 @@ void USpeekRecognizerFunctionLibrary::MSRLogin(const FString& Params)
 	IFlytekVoiceSDK::Get().VoiceSDKLogin(FString(), FString(), Params);
 }
 
-
+void USpeekRecognizerFunctionLibrary::MSRInit()
+{
+	IFlytekVoiceSDK::Get().SpeechRecInit();
+}
 void USpeekRecognizerFunctionLibrary::StartLisening()
 {
 	IFlytekVoiceSDK::Get().SpeechRecStartListening();
