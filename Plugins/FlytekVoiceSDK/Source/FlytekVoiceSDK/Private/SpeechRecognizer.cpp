@@ -8,6 +8,7 @@
 
 const FString Session_Begin_Param = TEXT("sub = iat, domain = iat, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8");
 
+const FString LoginParam = TEXT("appid = 58d087b0, work_dir = .");
 //DEFINE_LOG_CATEGORY(LogFlytekVoiceSDK);
 
 #define SPEECH_THREAD TEXT("SpeechThread")
@@ -258,7 +259,7 @@ void USpeechRecognizer::SpeechRecStopListeningRequest()
 int32 USpeechRecognizer::CallSRLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
 	FScopeLock ScopeLock1(&AccessLock);
-	ErrorResult[ES_LOGIN] = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*Params));
+	ErrorResult[ES_LOGIN] = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*LoginParam));
 	return ErrorResult[ES_LOGIN];
 }
 void USpeechRecognizer::CallSRLogout()
@@ -276,7 +277,7 @@ void USpeechRecognizer::CallSRInit()
 		OnSpeechEndResult
 	};
 	ErrorResult[ES_INIT] = sr_init(&SpeechRec, TCHAR_TO_UTF8(*Session_Begin_Param), SR_MIC, DEFAULT_INPUT_DEVID, &RecNotifier);
-	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Init! Error Code :%d"), ErrorResult)
+	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Init! Error Code :%d"), ErrorResult[ES_INIT])
 }
 void USpeechRecognizer::CallSRUninit()
 {
@@ -294,6 +295,7 @@ void USpeechRecognizer::CallSRStartListening()
 	if (bInitSuccessful)
 	{
 		ErrorResult[ES_STARTLISTENING] = sr_start_listening(&SpeechRec);
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Recognizer Code :%d"), ErrorResult[ES_STARTLISTENING])
 	}
 	else
 	{
@@ -307,6 +309,7 @@ void USpeechRecognizer::CallSRStopListening()
 	if (bInitSuccessful)
 	{
 		ErrorResult[ES_STOPLISTENING] = sr_stop_listening(&SpeechRec);
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Recognizer Code :%d"), ErrorResult[ES_STOPLISTENING])
 	}
 	else
 	{

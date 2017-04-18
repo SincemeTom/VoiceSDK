@@ -38,31 +38,10 @@ public:
 	virtual void Exit() override;
 
 	template <typename T>
-	void InitLoginThread(T *InObjectPtr, int32(T::*InFuncPtr)(const FString& UserName, const FString& Password, const FString& Params), const FString& ThreadName, const FString& InUserName, const FString& InPassword, const FString& InParams, EThreadState InState)
-	{
-		this->ObjectPtr = (UObject *)InObjectPtr;
-		this->LoginFunctionPtr = (int32(UObject::*)(const FString& UserName, const FString& Password, const FString& Params))InFuncPtr;	
-		UserName = InUserName;
-		Password = InPassword;
-		Params = InParams;
-		SetThreadState(InState);
-		if (!RunnableThread)
-		{
-			RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Lowest);
-		}	
-	}
+	void InitLoginThread(T *InObjectPtr, int32(T::*InFuncPtr)(const FString& UserName, const FString& Password, const FString& Params), const FString& ThreadName, const FString& InUserName, const FString& InPassword, const FString& InParams, EThreadState InState);
 
 	template <typename T>
-	void InitSpeechInitThread(T *InObjectPtr, void(T::*InFuncPtr)(void), const FString& ThreadName, EThreadState InState) {
-
-		this->ObjectPtr = (UObject *)InObjectPtr;
-		this->InitFunctionPtr = (void(UObject::*)(void))InFuncPtr;
-		SetThreadState(InState);
-		if (!RunnableThread)
-		{
-			RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Lowest);
-		}	
-	}
+	void InitSpeechInitThread(T *InObjectPtr, void(T::*InFuncPtr)(void), const FString& ThreadName, EThreadState InState); 
 
 
 	void Reset()
