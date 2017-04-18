@@ -112,8 +112,8 @@ void FFlytekVoiceSDKModule::StartupModule()
 	}
 
 #endif	
-	/*VoiceSDKLogin(FString(), FString(), LoginParams);
-	if (bLoginSuccessful)
+	//VoiceSDKLogin(FString(), FString(), LoginParams);
+	/*if (bLoginSuccessful)
 	{
 		auto error = SpeechRecInit();
 		if (error == 0)

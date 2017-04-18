@@ -66,6 +66,7 @@ private:
 	FString UserName;
 	FString Password;
 	FString Params;
+	int32 count = 0;
 }; 
 
 

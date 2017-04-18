@@ -9,15 +9,21 @@ FThreadClass::FThreadClass()
 
 FThreadClass::~FThreadClass()
 {
+	/*if (RunnableThread)
+	{
+		delete RunnableThread;
+	}*/
+	RunnableThread = nullptr;
 	Reset();
 }
 uint32 FThreadClass::Run()
 {
-	if (LoginFunctionPtr)
+	int32 i = 0;
+	if (RunnableThread && LoginFunctionPtr)
 	{
 		(this->ObjectPtr->*this->LoginFunctionPtr)(UserName, Password, Params);
 	}
-	if (InitFunctionPtr)
+	if (RunnableThread && InitFunctionPtr)
 	{
 		(this->ObjectPtr->*this->InitFunctionPtr)();
 	}
@@ -39,10 +45,10 @@ void FThreadClass::InitSpeechInitThread(T *InObjectPtr, void(T::*InFuncPtr)(void
 	this->ObjectPtr = (UObject *)InObjectPtr;
 	this->InitFunctionPtr = (void(UObject::*)(void))InFuncPtr;
 	SetThreadState(InState);
-	if (!RunnableThread)
-	{
-		RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Lowest);
-	}
+	//if (!RunnableThread)
+	//{
+	RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Normal);
+	//}
 }
 template <typename T>
 void FThreadClass::InitLoginThread(T *InObjectPtr, int32(T::*InFuncPtr)(const FString& UserName, const FString& Password, const FString& Params), const FString& ThreadName, const FString& InUserName, const FString& InPassword, const FString& InParams, EThreadState InState)
@@ -53,8 +59,8 @@ void FThreadClass::InitLoginThread(T *InObjectPtr, int32(T::*InFuncPtr)(const FS
 	Password = InPassword;
 	Params = InParams;
 	SetThreadState(InState);
-	if (!RunnableThread)
-	{
-		RunnableThread = FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Lowest);
-	}
+	//if (!RunnableThread)
+	//{
+	RunnableThread =  FRunnableThread::Create(this, *ThreadName, 0, EThreadPriority::TPri_Normal);
+	//}
 }

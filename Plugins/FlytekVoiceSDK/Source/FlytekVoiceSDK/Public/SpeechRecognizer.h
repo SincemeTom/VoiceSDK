@@ -100,5 +100,5 @@ private:
 	bool bLoginSuccessful;
 	bool bInitSuccessful;
 	bool bSpeeking;
-	class FThreadClass* SpeechThread;
+	TSharedPtr< class FThreadClass >  SpeechThread;
 };
