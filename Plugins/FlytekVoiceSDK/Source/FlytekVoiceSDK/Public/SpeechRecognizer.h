@@ -66,9 +66,9 @@ private:
 
 	void CallSRUninit();
 
-	void CallSRStartListening();
+	int32 CallSRStartListening();
 
-	void CallSRStopListening();
+	int32 CallSRStopListening();
 
 	//CallBack
 	void HandleOnLoginResult();
