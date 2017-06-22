@@ -5,6 +5,7 @@
 #include "Object.h"
 #include "Tickable.h"
 #include "FlytekVoiceSDK.h"
+#include "TaskGraphInterfaces.h"
 #include "SpeechRecognizer.generated.h"
 
 /**
@@ -61,7 +62,7 @@ private:
 
 	void CallSRLogout();
 
-	void CallSRInit();
+	int32 CallSRInit();
 
 	void CallSRUninit();
 
@@ -73,26 +74,9 @@ private:
 	void HandleOnLoginResult();
 
 	
-	
-	/*
-	virtual void SpeechRecLogout();
-
-	//Init SpeechRec
-	virtual int32 SpeechRecInit();
-
-	virtual void SpeechRecStartListening();
-
-	virtual void SpeechRecStopListening();
-
-	virtual void SpeechRecUninit();
-
-	virtual int32 SpeechRecWriteAudioData();
-
-	//Callback
-	*/
-	
 
 private:
+	FGraphEventRef SpeechRecognizeCompletion[EThreadState::ES_MAXSTATE];
 	FCriticalSection AccessLock;
 	int32 ErrorResult[EThreadState::ES_MAXSTATE];
 	struct speech_rec SpeechRec;

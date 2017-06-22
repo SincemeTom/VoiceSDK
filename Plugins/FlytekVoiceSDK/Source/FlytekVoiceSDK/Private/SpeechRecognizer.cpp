@@ -4,6 +4,7 @@
 #include "FlytekVoiceSDK.h"
 #include "ThreadClass.h"
 #include "ScopeLock.h"
+#include "SpeechRecognizeTask.h"
 
 
 const FString Session_Begin_Param = TEXT("sub = iat, domain = iat, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8");
@@ -64,6 +65,34 @@ USpeechRecognizer::~USpeechRecognizer()
 
 void USpeechRecognizer::Tick(float DeltaTime)
 {
+	for (int16 i = EThreadState::ES_NULL; i<EThreadState::ES_MAXSTATE;i++)
+	{
+		if (SpeechRecognizeCompletion[i] && SpeechRecognizeCompletion[i]->IsComplete())
+		{	
+			if (!bLoginSuccessful && i == EThreadState::ES_LOGIN)
+			{
+				UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogin Completed ! Error code : %d"), ErrorResult[ES_LOGIN]);
+				if (ErrorResult[ES_LOGIN] == 0)
+				{
+					bLoginSuccessful = true;
+				}	
+			}
+			else if (!bInitSuccessful && i == EThreadState::ES_INIT)
+			{
+				UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK Init Completed ! Error code : %d"), ErrorResult[ES_INIT]);
+				if (ErrorResult[ES_INIT] == 0)
+				{
+					bInitSuccessful = true;
+				}
+			}
+			//SpeechRecognizeCompletion[i]->Release();
+			//TaskArray[i]
+		}
+	}
+	
+
+
+	/*
 	FScopeLock ScopeLock1(&AccessLock);
 	if (SpeechThread.IsValid())
 	{
@@ -143,7 +172,7 @@ void USpeechRecognizer::Tick(float DeltaTime)
 			
 		//}
 	}
-
+	*/
 }
 bool USpeechRecognizer::IsTickable() const
 {
@@ -167,51 +196,21 @@ void USpeechRecognizer::SpeechRecLoginRequest(const FString& UserName, const FSt
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK has already Login Successful ! "))
 		return;
 	}
-	/*if (SpeechThread.IsValid())
-	{
-		SpeechThread->Reset();
-		SpeechThread->InitLoginThread(this, &USpeechRecognizer::CallSRLogin, SPEECH_THREAD, UserName, Password, Params, ES_LOGIN);
-		SpeechThread->Run();
-		
-	}
-	else
-	{*/
-		SpeechThread = MakeShareable( new FThreadClass(this, &USpeechRecognizer::CallSRLogin, SPEECH_THREAD, UserName, Password, Params, ES_LOGIN));
-		SpeechThread->Run();
-//	}
-	
-	
+	SpeechRecognizeCompletion[EThreadState::ES_LOGIN] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRLogin, SPEECH_THREAD, UserName, Password, Params);
 }
 
 void USpeechRecognizer::SpeechRecLogoutRequest()
 {
 
-	if (SpeechThread.IsValid())
-	{
-		SpeechThread->Reset();
-		SpeechThread->InitSpeechInitThread(this, &USpeechRecognizer::CallSRLogout, SPEECH_THREAD, ES_LOGOUT);
-		SpeechThread->Run();
-	}
-	else
-	{
-		//SpeechThread = new FThreadClass(this, &USpeechRecognizer::CallSRLogout, SPEECH_THREAD, ES_LOGOUT);
-		//SpeechThread->Run();
-	}
 }
 void USpeechRecognizer::SpeechRecInitRequest()
 {
-	/*if (SpeechThread.IsValid())
+	if (bInitSuccessful)
 	{
-		//SpeechThread->Reset();
-		SpeechThread->InitSpeechInitThread(this, &USpeechRecognizer::CallSRInit, SPEECH_THREAD, ES_INIT);
-		SpeechThread->Run();
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK has already Init Successful ! "));
+		return;
 	}
-	else
-	{*/
-		SpeechThread = MakeShareable( new FThreadClass(this, &USpeechRecognizer::CallSRInit, SPEECH_THREAD, ES_INIT));
-		SpeechThread->Run();
-	//}
-
+	SpeechRecognizeCompletion[EThreadState::ES_INIT] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRInit, SPEECH_THREAD);
 }
 void USpeechRecognizer::SpeechRecUninitRequest()
 {
@@ -260,30 +259,32 @@ void USpeechRecognizer::SpeechRecStopListeningRequest()
 }
 int32 USpeechRecognizer::CallSRLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
-	FScopeLock ScopeLock1(&AccessLock);
+	//FScopeLock ScopeLock1(&AccessLock);
 	ErrorResult[ES_LOGIN] = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*LoginParam));
 	return ErrorResult[ES_LOGIN];
 }
 void USpeechRecognizer::CallSRLogout()
 {
-	FScopeLock ScopeLock1(&AccessLock);
+	//FScopeLock ScopeLock1(&AccessLock);
 	ErrorResult[ES_LOGOUT] = sr_logout();
 }
 
-void USpeechRecognizer::CallSRInit()
+int32 USpeechRecognizer::CallSRInit()
 {
-	FScopeLock ScopeLock1(&AccessLock);
+	//FScopeLock ScopeLock1(&AccessLock);
 	RecNotifier = {
 		OnSpeechResult,
 		OnSpeechBeginResult,
 		OnSpeechEndResult
 	};
-	ErrorResult[ES_INIT] = sr_init(&SpeechRec, TCHAR_TO_ANSI(*Session_Begin_Param), SR_MIC, DEFAULT_INPUT_DEVID, &RecNotifier);
-	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Init! Error Code :%d"), ErrorResult[ES_INIT])
+	
+	 ErrorResult[ES_INIT] = sr_init(&SpeechRec, TCHAR_TO_ANSI(*Session_Begin_Param), SR_MIC, DEFAULT_INPUT_DEVID, &RecNotifier);
+	 UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Init! Error Code :%d"), ErrorResult[ES_INIT]);
+	 return ErrorResult[ES_INIT];
 }
 void USpeechRecognizer::CallSRUninit()
 {
-	FScopeLock ScopeLock1(&AccessLock);
+	//FScopeLock ScopeLock1(&AccessLock);
 	if (bInitSuccessful)
 	{
 		sr_uninit(&SpeechRec);
