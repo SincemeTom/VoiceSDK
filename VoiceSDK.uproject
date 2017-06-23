@@ -15,5 +15,8 @@
 			"Name": "FlytekVoiceSDK",
 			"Enabled": true
 		}
+	],
+	"TargetPlatforms": [
+		"WindowsNoEditor"
 	]
 }

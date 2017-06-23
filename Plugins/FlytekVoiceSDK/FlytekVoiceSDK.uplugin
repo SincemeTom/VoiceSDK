@@ -5,13 +5,13 @@
 	"FriendlyName": "FlytekVoiceSDK",
 	"Description": "",
 	"Category": "Other",
-	"CreatedBy": "Michael",
+	"CreatedBy": "Tom",
 	"CreatedByURL": "https://www.7663.com",
 	"DocsURL": "https://www.7663.com",
 	"MarketplaceURL": "",
 	"SupportURL": "https://www.7663.com",
 	"CanContainContent": false,
-	"IsBetaVersion": false,
+	"IsBetaVersion": true,
 	"Installed": true,
 	"Modules": [
 		{
