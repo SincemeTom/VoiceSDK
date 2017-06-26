@@ -12,7 +12,7 @@
  * 
  */
 
-enum EThreadState
+enum ETaskAction
 {
 	ES_NULL,
 	ES_LOGIN,
@@ -34,7 +34,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual bool IsTickable()  const override;
 	virtual TStatId GetStatId() const override;
-
+	virtual void PostInitProperties();
 	//Login in IFlytek Voice Plugin
 	void SpeechRecLoginRequest(const FString& UserName, const FString& Password, const FString& Params);
 
@@ -64,7 +64,7 @@ private:
 
 	int32 CallSRInit();
 
-	void CallSRUninit();
+	int32 CallSRUninit();
 
 	int32 CallSRStartListening();
 
@@ -73,16 +73,17 @@ private:
 	//CallBack
 	void HandleOnLoginResult();
 
-	
 
+public:
+	FSpeechRecognizeResultDelegate CallbackResult;
 private:
-	FGraphEventRef SpeechRecognizeCompletion[EThreadState::ES_MAXSTATE];
+
+	FGraphEventRef SpeechRecognizeCompletion[ETaskAction::ES_MAXSTATE];
 	FCriticalSection AccessLock;
-	int32 ErrorResult[EThreadState::ES_MAXSTATE];
+	int32 ErrorResult[ETaskAction::ES_MAXSTATE];
 	struct speech_rec SpeechRec;
 	struct speech_rec_notifier RecNotifier;
 	bool bLoginSuccessful;
 	bool bInitSuccessful;
 	bool bSpeeking;
-	TSharedPtr< class FThreadClass >  SpeechThread;
 };

@@ -72,7 +72,7 @@ public:
 protected:
 private:
 	USpeechRecognizer *ObjectPtr = nullptr;
-	EThreadState State = ES_NULL;
+	ETaskAction State = ES_NULL;
 	int32(USpeechRecognizer::*InitFunctionPtr)() = nullptr;
 	int32(USpeechRecognizer::*LoginFunctionPtr)(const FString& UserName, const FString& Password, const FString& Params) = nullptr;
 	FString ThreadName;

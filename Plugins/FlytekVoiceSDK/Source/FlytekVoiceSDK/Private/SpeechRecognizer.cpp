@@ -2,7 +2,6 @@
 
 #include "SpeechRecognizer.h"
 #include "FlytekVoiceSDK.h"
-#include "ThreadClass.h"
 #include "ScopeLock.h"
 #include "SpeechRecognizeTask.h"
 
@@ -55,29 +54,39 @@ USpeechRecognizer::USpeechRecognizer()
 	}
 	pSpeechRecognizer = this;
 	bLoginSuccessful = false;
-	SpeechThread = nullptr;// MakeShareable(new FThreadClass());
+	//SpeechRecLoginRequest(FString(), FString(), LoginParam);
 }
 USpeechRecognizer::~USpeechRecognizer()
 {
-	//SpeechThread->Exit();
-	SpeechThread = nullptr;
+	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("SpeechRecognizer Destroyed"));
+	IFlytekVoiceSDK::Get().ResetSpeechRecPtr();
+	bLoginSuccessful = false;
+	bInitSuccessful = false;
+	bSpeeking = false;
+	CallSRUninit();
+	CallSRLogout();	
 }
 
+void USpeechRecognizer::PostInitProperties()
+{
+	Super::PostInitProperties();
+}
 void USpeechRecognizer::Tick(float DeltaTime)
 {
-	for (int16 i = EThreadState::ES_NULL; i<EThreadState::ES_MAXSTATE;i++)
+	for (int16 i = ETaskAction::ES_NULL; i<ETaskAction::ES_MAXSTATE;i++)
 	{
 		if (SpeechRecognizeCompletion[i] && SpeechRecognizeCompletion[i]->IsComplete())
 		{	
-			if (!bLoginSuccessful && i == EThreadState::ES_LOGIN)
+			if (!bLoginSuccessful && i == ETaskAction::ES_LOGIN)
 			{
 				UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogin Completed ! Error code : %d"), ErrorResult[ES_LOGIN]);
 				if (ErrorResult[ES_LOGIN] == 0)
 				{
 					bLoginSuccessful = true;
+					SpeechRecInitRequest();
 				}	
 			}
-			else if (!bInitSuccessful && i == EThreadState::ES_INIT)
+			else if (!bInitSuccessful && i == ETaskAction::ES_INIT)
 			{
 				UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK Init Completed ! Error code : %d"), ErrorResult[ES_INIT]);
 				if (ErrorResult[ES_INIT] == 0)
@@ -85,7 +94,7 @@ void USpeechRecognizer::Tick(float DeltaTime)
 					bInitSuccessful = true;
 				}
 			}
-			else if (i == EThreadState::ES_STARTLISTENING)
+			else if (i == ETaskAction::ES_STARTLISTENING)
 			{
 				if (ErrorResult[ES_STARTLISTENING] == 0)
 				{
@@ -97,7 +106,7 @@ void USpeechRecognizer::Tick(float DeltaTime)
 				}
 				ErrorResult[ES_STARTLISTENING] = -1;
 			}
-			else if (i == EThreadState::ES_STOPLISTENING)
+			else if (i == ETaskAction::ES_STOPLISTENING)
 			{
 				if (ErrorResult[ES_STOPLISTENING] == 0)
 				{
@@ -110,94 +119,10 @@ void USpeechRecognizer::Tick(float DeltaTime)
 				ErrorResult[ES_STOPLISTENING] = -1;
 			}
 			
-			//SpeechRecognizeCompletion[i]->Release();
-			//TaskArray[i]
+			SpeechRecognizeCompletion[i].SafeRelease();
+
 		}
-	}
-	
-
-
-	/*
-	FScopeLock ScopeLock1(&AccessLock);
-	if (SpeechThread.IsValid())
-	{
-		//if (ErrorResult != -1)
-		//{
-			//switch (SpeechThread->GetThreadState())
-			//{
-			//case ES_NULL:
-			//	break;
-			//case ES_LOGIN:
-				if (ErrorResult[ES_LOGIN] == 0)
-				{
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogin Successful ! "))
-					bLoginSuccessful = true;
-					HandleOnLoginResult();			
-				}
-				else if (ErrorResult[ES_LOGIN] != -1)
-				{
-					bLoginSuccessful = false;
-					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogin Faild ! Error code : %d"), ErrorResult[ES_LOGIN])
-				}		
-				ErrorResult[ES_LOGIN] = -1;
-			//	break;
-		//	case ES_LOGOUT:
-				if (ErrorResult[ES_LOGOUT] == 0)
-				{
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogout Successful ! "))
-				}
-				else if (ErrorResult[ES_LOGOUT] != -1)
-				{
-					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogout Faild ! Error code : %d"), ErrorResult[ES_LOGOUT])
-				}
-				ErrorResult[ES_LOGOUT] = -1;
-			//	break;
-			//case ES_INIT:
-				if (ErrorResult[ES_INIT] == 0)
-				{
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK Init Successful ! "))
-					bInitSuccessful = true;
-					
-				}
-				else if (ErrorResult[ES_INIT] != -1)
-				{
-					UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDK Init Faild ! Error code : %d"), ErrorResult[ES_INIT])
-					bInitSuccessful = false;					
-				}
-				ErrorResult[ES_INIT] = -1;
-			//	break;
-			//case ES_UNINIT:		
-			//	break;
-		//	case ES_STARTLISTENING:
-				if (ErrorResult[ES_STARTLISTENING] == 0)
-				{
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech!"))
-				}
-				else if (ErrorResult[ES_STARTLISTENING] != -1)
-				{
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech faild! Error Code :%d"), ErrorResult[ES_STARTLISTENING])
-				}
-				ErrorResult[ES_STARTLISTENING] = -1;
-			//	break;
-			//case ES_STOPLISTENING:
-				if (ErrorResult[ES_STOPLISTENING] == 0)
-				{
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Stop Speech!"))
-				}
-				else if(ErrorResult[ES_STOPLISTENING] != -1)
-				{
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Stop Speech faild! Error Code :%d"), ErrorResult[ES_STOPLISTENING])
-				}
-				ErrorResult[ES_STOPLISTENING] = -1;
-			//	break;
-			//default:
-		//		break;
-			//}
-		//	SpeechThread->SetThreadState(ES_NULL);
-			
-		//}
-	}
-	*/
+	}	
 }
 bool USpeechRecognizer::IsTickable() const
 {
@@ -221,7 +146,7 @@ void USpeechRecognizer::SpeechRecLoginRequest(const FString& UserName, const FSt
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK has already Login Successful ! "))
 		return;
 	}
-	SpeechRecognizeCompletion[EThreadState::ES_LOGIN] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRLogin, SPEECH_THREAD, UserName, Password, Params);
+	SpeechRecognizeCompletion[ETaskAction::ES_LOGIN] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRLogin, SPEECH_THREAD, UserName, Password, Params);
 }
 
 void USpeechRecognizer::SpeechRecLogoutRequest()
@@ -235,56 +160,37 @@ void USpeechRecognizer::SpeechRecInitRequest()
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK has already Init Successful ! "));
 		return;
 	}
-	SpeechRecognizeCompletion[EThreadState::ES_INIT] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRInit, SPEECH_THREAD);
+	SpeechRecognizeCompletion[ETaskAction::ES_INIT] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRInit, SPEECH_THREAD);
 }
 void USpeechRecognizer::SpeechRecUninitRequest()
 {
-	if (SpeechThread.IsValid())
-	{
-		SpeechThread->Reset();
-		SpeechThread->InitSpeechInitThread(this, &USpeechRecognizer::CallSRUninit, SPEECH_THREAD, ES_UNINIT);
-		SpeechThread->Run();
-	
-	}
-	else
-	{
-		//SpeechThread =new FThreadClass(this, &USpeechRecognizer::CallSRUninit, SPEECH_THREAD, ES_UNINIT);
-		//SpeechThread->Run();
-	}
+	SpeechRecognizeCompletion[ETaskAction::ES_UNINIT] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRUninit, SPEECH_THREAD);
 }
 
 void USpeechRecognizer::SpeechRecStartListeningRequest()
 {
-	/*if (SpeechThread.IsValid())
+	if (!bLoginSuccessful)
 	{
-		SpeechThread->Reset();
-		SpeechThread->InitSpeechInitThread(this, &USpeechRecognizer::CallSRStartListening, SPEECH_THREAD, ES_STARTLISTENING);
-		SpeechThread->Run();
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  must Login first ! "));
+		return;
 	}
 	else
 	{
-		//SpeechThread = MakeShareable(new FThreadClass(this, &USpeechRecognizer::CallSRStartListening, SPEECH_THREAD, ES_STARTLISTENING));
-		//SpeechThread->Run();
-	}*/
-	if (!bLoginSuccessful)
-	{
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  must login first ! "));
-		return;
+		//SpeechRecLoginRequest(FString(), FString(), LoginParam);
 	}
 	if (!bInitSuccessful)
 	{
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  must init first ! "));
 		return;
 	}
-	SpeechRecognizeCompletion[EThreadState::ES_STARTLISTENING] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRStartListening, SPEECH_THREAD);
-
+	SpeechRecognizeCompletion[ETaskAction::ES_STARTLISTENING] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRStartListening, SPEECH_THREAD);
 }
 
 void USpeechRecognizer::SpeechRecStopListeningRequest()
 {
 	if (!bLoginSuccessful)
 	{
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  must login first ! "));
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  must Login first ! "));
 		return;
 	}
 	if (!bInitSuccessful)
@@ -292,24 +198,24 @@ void USpeechRecognizer::SpeechRecStopListeningRequest()
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  must init first ! "));
 		return;
 	}
-	SpeechRecognizeCompletion[EThreadState::ES_STOPLISTENING] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRStopListening, SPEECH_THREAD);
+	SpeechRecognizeCompletion[ETaskAction::ES_STOPLISTENING] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRStopListening, SPEECH_THREAD);
 
 }
 int32 USpeechRecognizer::CallSRLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
-	//FScopeLock ScopeLock1(&AccessLock);
+	FScopeLock ScopeLock1(&AccessLock);
 	ErrorResult[ES_LOGIN] = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*LoginParam));
 	return ErrorResult[ES_LOGIN];
 }
 void USpeechRecognizer::CallSRLogout()
 {
-	//FScopeLock ScopeLock1(&AccessLock);
+	FScopeLock ScopeLock1(&AccessLock);
 	ErrorResult[ES_LOGOUT] = sr_logout();
 }
 
 int32 USpeechRecognizer::CallSRInit()
 {
-	//FScopeLock ScopeLock1(&AccessLock);
+	FScopeLock ScopeLock1(&AccessLock);
 	RecNotifier = {
 		OnSpeechResult,
 		OnSpeechBeginResult,
@@ -320,19 +226,22 @@ int32 USpeechRecognizer::CallSRInit()
 	 UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Init! Error Code :%d"), ErrorResult[ES_INIT]);
 	 return ErrorResult[ES_INIT];
 }
-void USpeechRecognizer::CallSRUninit()
+int32 USpeechRecognizer::CallSRUninit()
 {
-	//FScopeLock ScopeLock1(&AccessLock);
+	FScopeLock ScopeLock1(&AccessLock);
+	int32 ret = -1;
 	if (bInitSuccessful)
 	{
 		sr_uninit(&SpeechRec);
+		ret = 0;
 	}
 	bInitSuccessful = false;
+	return ret;
 }
 
 int32 USpeechRecognizer::CallSRStartListening()
 {
-	//FScopeLock ScopeLock1(&AccessLock);
+	FScopeLock ScopeLock1(&AccessLock);
 	if (bInitSuccessful)
 	{
 		ErrorResult[ES_STARTLISTENING] = sr_start_listening(&SpeechRec);
@@ -347,7 +256,7 @@ int32 USpeechRecognizer::CallSRStartListening()
 
 int32 USpeechRecognizer::CallSRStopListening()
 {
-	//FScopeLock ScopeLock1(&AccessLock);
+	FScopeLock ScopeLock1(&AccessLock);
 	if (bInitSuccessful)
 	{
 		ErrorResult[ES_STOPLISTENING] = sr_stop_listening(&SpeechRec);
@@ -370,7 +279,9 @@ void USpeechRecognizer::OnSpeechRecResult(const char* result, char is_last)
 			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Last words"), *SpeechResultStr)
 
 		}
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking String :[%s]"), *SpeechResultStr)
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking String :[%s]"), *SpeechResultStr);
+		CallbackResult.Broadcast(SpeechResultStr);
+
 	}
 }
 void USpeechRecognizer::OnSpeechRecBegin()

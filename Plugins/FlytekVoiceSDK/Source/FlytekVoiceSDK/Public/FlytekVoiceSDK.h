@@ -24,6 +24,10 @@ public:
 		static FName FeatureName = FName(TEXT("FlytekVoiceSDK"));
 		return FeatureName;
 	}
+	virtual bool IsGameModule() const
+	{
+		return true;
+	}
 
 	/**
 	* Singleton-like access to this module's interface.  This is just for convenience!
@@ -65,22 +69,15 @@ public:
 	virtual int32 SpeechRecWriteAudioData() = 0;
 
 
-	virtual void OnSpeechRecResult(const char* result, char is_last) = 0;
-	virtual void OnSpeechRecBegin() = 0;
-	virtual void OnSpeechRecEnd(int reason) = 0;
+	virtual class USpeechRecognizer* InitializeSpeechRecognize() = 0;
 
-	/*
-	int sr_logout();
-	int sr_init(struct speech_rec * sr, const char * session_begin_params, enum sr_audsrc aud_src, int devid, struct speech_rec_notifier * notifier);
-	int sr_start_listening(struct speech_rec *sr);
-	int sr_stop_listening(struct speech_rec *sr);
-	// only used for the manual write way. 
-	int sr_write_audio_data(struct speech_rec *sr, char *data, unsigned int len);
-	// must call uninit after you don't use it 
-	void sr_uninit(struct speech_rec * sr);
-	*/
+	void ResetSpeechRecPtr() { SpeechRecPtr = nullptr; }
+
 public:
-	FSpeechRecognizeResultDelegate CallbackResult;
+
+	class USpeechRecognizer* SpeechRecPtr = nullptr;
+private:
+	
 };
 class FFlytekVoiceSDKModule : public IFlytekVoiceSDK
 {
@@ -105,13 +102,9 @@ public:
 
 	virtual int32 SpeechRecWriteAudioData() override;
 
-	virtual void OnSpeechRecResult(const char* result, char is_last) override;
-	virtual void OnSpeechRecBegin() override;
-	virtual void OnSpeechRecEnd(int reason) override;
-
-	virtual void StartListening();
+	virtual class USpeechRecognizer* InitializeSpeechRecognize() override;
 private:
-	class USpeechRecognizer* SpeechRecPtr = nullptr;
+	//class USpeechRecognizer* SpeechRecPtr = nullptr;
 	void* DllHandle;
 	struct speech_rec SpeechRec;
 	struct speech_rec_notifier RecNotifier;

@@ -2,11 +2,12 @@
 
 #include "VoiceSDK.h"
 #include "FlytekVoiceSDK.h"
+#include "SpeechRecognizer.h"
 #include "MyGameInstance.h"
 
 void UMyGameInstance::Init()
 {
-	IFlytekVoiceSDK::Get().CallbackResult.AddUObject(this, &UMyGameInstance::OnSpeechRecognizeResult);
+	IFlytekVoiceSDK::Get().InitializeSpeechRecognize()->CallbackResult.AddUObject(this, &UMyGameInstance::OnSpeechRecognizeResult);
 }
 
 

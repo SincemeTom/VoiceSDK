@@ -3,7 +3,6 @@
 
 #include "FlytekVoiceSDK.h"
 #include "Paths.h"
-#include "ThreadClass.h"
 #include "IPluginManager.h"
 #include "WindowsPlatformProcess.h"
 #include "MessageDialog.h"
@@ -21,33 +20,6 @@ IFlytekVoiceSDK *gFFlytexSDK = nullptr;
 
 #define LOCTEXT_NAMESPACE "FFlytekVoiceSDKModule"
 
-extern "C"
-{
-	void OnResult(const char* result, char is_last)
-	{
-		if (gFFlytexSDK)
-		{
-			gFFlytexSDK->OnSpeechRecResult(result, is_last);
-		}
-	}
-
-	void OnSpeechBegin()
-	{
-		if (gFFlytexSDK)
-		{
-			gFFlytexSDK->OnSpeechRecBegin();
-		}
-	}
-
-	void OnSpeechEnd(int reason)
-	{
-		if (gFFlytexSDK)
-		{
-			gFFlytexSDK->OnSpeechRecEnd(reason);
-		}
-	}
-}
-
 
 FFlytekVoiceSDKModule::FFlytekVoiceSDKModule()
 {
@@ -55,52 +27,42 @@ FFlytekVoiceSDKModule::FFlytekVoiceSDKModule()
 }
 FFlytekVoiceSDKModule::~FFlytekVoiceSDKModule()
 {
-
+	gFFlytexSDK = nullptr;
+	ResetSpeechRecPtr();
 }
 void FFlytekVoiceSDKModule::StartupModule()
 {
 	if (IsAvailable())
 	{
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("%s"), TEXT("Module Started"));
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("%s"), TEXT("FlytekVoice Module Started"));
 	}
 #if 1
 	// Get the base directory of this plugin
 	FString BaseDir = IPluginManager::Get().FindPlugin("FlytekVoiceSDK")->GetBaseDir();
 
 	// Add on the relative location of the third party dll and load it
-	FString LibraryPath;
+	FString MSCLibraryPath;
 #if PLATFORM_WINDOWS
 #if PLATFORM_64BITS
-	LibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/msc_x64.dll"));
+	MSCLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/msc_x64.dll"));
 #else
-	LibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/msc_x64.dll"));
+	MSCLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/msc_x64.dll"));
 #endif
 #endif
 
-	/*DllHandle = !LibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*LibraryPath) : nullptr;
-
-	if (DllHandle)
-	{
-		// Call the test function in the third party library that opens a message box
-	}
-	else
-	{
-		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("ThirdPartyLibraryError", "Failed to load voice sdk third party library"));
-	}
-	*/
 
 	// Add on the relative location of the third party dll and load it
 	FString DllLibraryPath;
 #if PLATFORM_WINDOWS
 #if PLATFORM_64BITS
 	
-	DllLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/iat_record_sample.dll"));
+	//DllLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/iat_record_sample.dll"));
 #else
-	DllLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/iat_record_sample.dll"));
+	//DllLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/iat_record_sample.dll"));
 #endif
 #endif
 
-	DllHandle = !LibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*LibraryPath) : nullptr;
+	DllHandle = !MSCLibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*MSCLibraryPath) : nullptr;
 
 	if (DllHandle)
 	{
@@ -112,21 +74,6 @@ void FFlytekVoiceSDKModule::StartupModule()
 	}
 
 #endif	
-	//VoiceSDKLogin(FString(), FString(), LoginParams);
-	/*if (bLoginSuccessful)
-	{
-		auto error = SpeechRecInit();
-		if (error == 0)
-		{
-			bInitSuccessful = true;
-			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speech recognizer init successful ! "))
-		}
-		else
-		{
-			bInitSuccessful = false;
-			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speech recognizer init faild ! ErrorCode : %d"), error)
-		}
-	}*/
 }
 
 void FFlytekVoiceSDKModule::ShutdownModule()
@@ -136,14 +83,26 @@ void FFlytekVoiceSDKModule::ShutdownModule()
 		FPlatformProcess::FreeDllHandle(DllHandle);
 	}
 	DllHandle = nullptr;
-	//SpeechRecUninit();
-	//VoiceSDKLogout();
-
+	//SpeechRecPtr->ConditionalBeginDestroy();
+	SpeechRecPtr = nullptr;
+	if (IsAvailable())
+	{
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("%s"), TEXT("FlytekVoice Module Shutdown"));
+	}
+}
+USpeechRecognizer* FFlytekVoiceSDKModule::InitializeSpeechRecognize()
+{
+	if (!SpeechRecPtr)
+	{
+		SpeechRecPtr = NewObject<USpeechRecognizer>();
+	}
+	SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), LoginParams);
+	return SpeechRecPtr;
 }
 
 void FFlytekVoiceSDKModule::VoiceSDKLogin(const FString& UserName, const FString& Password, const FString& Params)
 {
-	if (SpeechRecPtr)
+	if (SpeechRecPtr && !SpeechRecPtr->IsPendingKill())
 	{
 		SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), LoginParams);
 	}
@@ -153,117 +112,45 @@ void FFlytekVoiceSDKModule::VoiceSDKLogin(const FString& UserName, const FString
 		SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), LoginParams);
 	}
 	
-	//TCHAR_TO_ANSI
-	/*
-	auto Result = sr_login(TCHAR_TO_ANSI(*UserName), TCHAR_TO_ANSI(*Password), TCHAR_TO_ANSI(*Params));
-	if (Result == 0)
-	{
-		bLoginSuccessful = true;
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogin Successful ! "))
-	}
-	else
-	{
-		bLoginSuccessful = false;
-		UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogin Faild ! Error code : %d"), Result)
-	}*/
-	
 }
 void FFlytekVoiceSDKModule::VoiceSDKLogout()
 {
-
-
-	if (SpeechRecPtr)
+	if (SpeechRecPtr && !SpeechRecPtr->IsPendingKill())
 	{
 		SpeechRecPtr->SpeechRecLogoutRequest();
 	}
-	/*auto Result = sr_logout();
-	if (Result == 0)
-	{
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDKLogout Successful ! "))
-	}
-	else
-	{
-		UE_LOG(LogFlytekVoiceSDK, Error, TEXT("VoiceSDKLogout Faild ! Error code : %d"), Result)
-	}*/
 }
 
 int32 FFlytekVoiceSDKModule::SpeechRecInit()
 {
-	if (SpeechRecPtr)
+	if (SpeechRecPtr && !SpeechRecPtr->IsPendingKill())
 	{
 		SpeechRecPtr->SpeechRecInitRequest();
 	}
-	/*RecNotifier = {
-		OnResult,
-		OnSpeechBegin,
-		OnSpeechEnd
-	};
-	int32 ErrorCode = sr_init(&SpeechRec, TCHAR_TO_ANSI(*Session_Begin_Params), SR_MIC, DEFAULT_INPUT_DEVID, &RecNotifier);
-	return ErrorCode;
-	*/
 	return 0;
 }
 void FFlytekVoiceSDKModule::SpeechRecUninit()
 {
-	if (SpeechRecPtr)
+	if (SpeechRecPtr && !SpeechRecPtr->IsPendingKill())
 	{
 		SpeechRecPtr->SpeechRecUninitRequest();
 	}
 
-	/*if (bInitSuccessful)
-	{
-		sr_uninit(&SpeechRec);
-	}
-	bInitSuccessful = false;
-	*/
 }
 void FFlytekVoiceSDKModule::SpeechRecStartListening()
 {
-	if (SpeechRecPtr)
+	if (SpeechRecPtr && !SpeechRecPtr->IsPendingKill())
 	{
 		SpeechRecPtr->SpeechRecStartListeningRequest();
 	}
-	/*if (bInitSuccessful)
-	{
-		int32 ErrorCode = sr_start_listening(&SpeechRec);
-		if (ErrorCode == 0)
-		{
-			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech!"))
-		}
-		else
-		{
-			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech faild! Error Code :%d"),ErrorCode)
-		}
-	}
-	else
-	{
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speek Recognizer uninitialized"))
-	}
-	*/
 }
 
 void FFlytekVoiceSDKModule::SpeechRecStopListening()
 {
-	if (SpeechRecPtr)
+	if (SpeechRecPtr && !SpeechRecPtr->IsPendingKill())
 	{
 		SpeechRecPtr->SpeechRecStopListeningRequest();
 	}
-	/*if (bInitSuccessful)
-	{
-		int32 ErrorCode = sr_stop_listening(&SpeechRec);
-		if (ErrorCode == 0)
-		{
-			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Stop Speech!"))
-		}
-		else
-		{
-			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Stop Speech faild! Error Code :%d"), ErrorCode)
-		}		
-	}
-	else
-	{
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speek Recognizer uninitialized"))
-	}*/
 }
 int32 FFlytekVoiceSDKModule::SpeechRecWriteAudioData()
 {
@@ -272,44 +159,6 @@ int32 FFlytekVoiceSDKModule::SpeechRecWriteAudioData()
 	return sr_write_audio_data(&SpeechRec, &data, len);
 }
 
-void FFlytekVoiceSDKModule::OnSpeechRecResult(const char* result, char is_last)
-{
-	FString SpeechResultStr = UTF8_TO_TCHAR(result);
-	if (bSpeeking)
-	{
-		CallbackResult.Broadcast(SpeechResultStr);
-		if (is_last)
-		{
-			bSpeeking = false;
-			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Last words"), *SpeechResultStr)
-				
-		}
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking String :[%s]"), *SpeechResultStr)
-	}
-}
-void FFlytekVoiceSDKModule::OnSpeechRecBegin()
-{
-	bSpeeking = true;
-	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("OnSpeechRecBegin"))
-}
-void FFlytekVoiceSDKModule::OnSpeechRecEnd(int reason)
-{
-	if (reason == END_REASON_VAD_DETECT)
-	{
-		bSpeeking = false;
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Done"))			
-	}
-	else
-	{
-		bSpeeking = false;
-		UE_LOG(LogFlytekVoiceSDK, Error, TEXT("On Speech Recognizer Error : %d"), reason)
-	}
-
-}
-void FFlytekVoiceSDKModule::StartListening()
-{
-	//return sr_start_listening(&SpeechRec);
-}
 
 #undef LOCTEXT_NAMESPACE
 	
