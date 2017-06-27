@@ -6,14 +6,16 @@
 #include "SpeechRecognizeTask.h"
 
 
-const FString Session_Begin_Param = TEXT("sub = iat, domain = iat, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8");
+#define  LANGUAGE_ENGLISH TEXT("en_us");
+#define  LANGUAGE_CHINESE TEXT("zh_ch");
+
+const FString Session_Begin_Param = TEXT("sub = iat, domain = iat, language = en_us, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8");
+//const FString Session_Begin_Param = FString::Printf(TEXT("sub = asr, domain = asr, language = %s, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8")
+//	, TEXT("zh_ch"));
 
 const FString LoginParam = TEXT("appid = 58d087b0, work_dir = .");
-//DEFINE_LOG_CATEGORY(LogFlytekVoiceSDK);
 
 #define SPEECH_THREAD TEXT("SpeechThread")
-
-//const FString Session_Begin_Params = TEXT("sub = iat, domain = iat, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8");
 
 USpeechRecognizer* pSpeechRecognizer = nullptr;
 
@@ -54,6 +56,7 @@ USpeechRecognizer::USpeechRecognizer()
 	}
 	pSpeechRecognizer = this;
 	bLoginSuccessful = false;
+	bAutoStop = false;
 	//SpeechRecLoginRequest(FString(), FString(), LoginParam);
 }
 USpeechRecognizer::~USpeechRecognizer()
@@ -122,7 +125,14 @@ void USpeechRecognizer::Tick(float DeltaTime)
 			SpeechRecognizeCompletion[i].SafeRelease();
 
 		}
-	}	
+	}
+	FScopeLock ScopeLock1(&AccessLock);
+	if (bOnSpeechRecResultSuccesful)
+	{
+		CallbackResult.Broadcast(SpeechResultString);
+		SpeechResultString = NULL;
+		bOnSpeechRecResultSuccesful = false;
+	}
 }
 bool USpeechRecognizer::IsTickable() const
 {
@@ -270,31 +280,37 @@ int32 USpeechRecognizer::CallSRStopListening()
 }
 void USpeechRecognizer::OnSpeechRecResult(const char* result, char is_last)
 {
+	FScopeLock ScopeLock1(&AccessLock);
 	FString SpeechResultStr = UTF8_TO_TCHAR(result);
 	if (bSpeeking)
 	{
 		if (is_last)
 		{
 			bSpeeking = false;
-			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Last words"), *SpeechResultStr)
-
+			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Last words"), *SpeechResultStr);
+			bOnSpeechRecResultSuccesful = true;
 		}
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking String :[%s]"), *SpeechResultStr);
-		CallbackResult.Broadcast(SpeechResultStr);
-
+		SpeechResultString = SpeechResultStr;
+		bOnSpeechRecResultSuccesful = true;
 	}
 }
 void USpeechRecognizer::OnSpeechRecBegin()
 {
+	FScopeLock ScopeLock1(&AccessLock);
 	bSpeeking = true;
-	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("OnSpeechRecBegin"))
+	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("OnSpeechRecBegin"));
+	bOnSpeechRecBeginSuccesful = true;
+
 }
 void USpeechRecognizer::OnSpeechRecEnd(int reason)
 {
+	FScopeLock ScopeLock1(&AccessLock);
 	if (reason == END_REASON_VAD_DETECT)
 	{
 		bSpeeking = false;
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Done"))
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Done"));
+		bOnSpeechRecEndSuccesful = true;
 	}
 	else
 	{

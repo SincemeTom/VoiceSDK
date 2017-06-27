@@ -20,5 +20,7 @@ public:
 		void OnSpeechRecognizeResult(const FString& OutString);
 	//UPROPERTY(BlueprintAssignable, Category = SpeechRec)
 	//	FSpeechRecognizeResultDelegate CallbackResult;
-	
+protected:
+	//UPROPERTY()
+		//class USpeechRecognizer* SpeechRecUObj;
 };

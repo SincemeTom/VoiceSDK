@@ -5,15 +5,31 @@
 
 
 
-void USpeechRecognizeCallbackProxyAdvaced::Activate()
+USpeechRecognizeCallbackProxyAdvaced* USpeechRecognizeCallbackProxyAdvaced::SpeechRecognize(ESpeechLanguage Language, bool AutoStop)
 {
-	
-	//IFlytekVoiceSDK::Get().SpeechRecStartListening();
+	USpeechRecognizeCallbackProxyAdvaced* Instance = NewObject<USpeechRecognizeCallbackProxyAdvaced>();
+	Instance->PostActive(Language, AutoStop);
+	return Instance;
 }
 
+void USpeechRecognizeCallbackProxyAdvaced::Activate()
+{
+	//IFlytekVoiceSDK::Get().InitializeSpeechRecognize()
+	
+}
+void USpeechRecognizeCallbackProxyAdvaced::PostActive(ESpeechLanguage Language, bool AutoStop)
+{
+	SpeechLanguage = Language;
+	AutoStop = bAutoStop;
+}
+void USpeechRecognizeCallbackProxyAdvaced::StopReconize()
+{
+
+}
+/*
 void USpeechRecognizeCallbackProxy::Tick(float DeltaTime)
 {
-	//ThreadManager::Create(this, &USpeechRecognizeCallbackProxy::StartListening, TEXT("StartListeningThread"));
+
 	
 }
 void USpeechRecognizeCallbackProxy::StartListening()
@@ -28,4 +44,4 @@ bool USpeechRecognizeCallbackProxy::IsTickable() const
 TStatId USpeechRecognizeCallbackProxy::GetStatId() const
 {
 	return TStatId();
-}
+}*/

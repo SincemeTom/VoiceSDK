@@ -7,6 +7,8 @@
 
 void UMyGameInstance::Init()
 {
+	//SpeechRecUObj = IFlytekVoiceSDK::Get().InitializeSpeechRecognize();
+	//SpeechRecUObj->CallbackResult.AddUObject(this, &UMyGameInstance::OnSpeechRecognizeResult);
 	IFlytekVoiceSDK::Get().InitializeSpeechRecognize()->CallbackResult.AddUObject(this, &UMyGameInstance::OnSpeechRecognizeResult);
 }
 

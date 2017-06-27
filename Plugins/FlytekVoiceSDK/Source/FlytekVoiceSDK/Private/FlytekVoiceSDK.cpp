@@ -12,8 +12,6 @@
 
 
 
-const FString LoginParams = TEXT("appid = 58d087b0, work_dir = .");
-const FString Session_Begin_Params = TEXT("sub = iat, domain = iat, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8");
 
 class FlytekVoiceSDK;
 IFlytekVoiceSDK *gFFlytexSDK = nullptr;
@@ -95,8 +93,9 @@ USpeechRecognizer* FFlytekVoiceSDKModule::InitializeSpeechRecognize()
 	if (!SpeechRecPtr)
 	{
 		SpeechRecPtr = NewObject<USpeechRecognizer>();
+		SpeechRecPtr->AddToRoot();
 	}
-	SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), LoginParams);
+	SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), FString());
 	return SpeechRecPtr;
 }
 
@@ -104,12 +103,12 @@ void FFlytekVoiceSDKModule::VoiceSDKLogin(const FString& UserName, const FString
 {
 	if (SpeechRecPtr && !SpeechRecPtr->IsPendingKill())
 	{
-		SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), LoginParams);
+		SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), FString());
 	}
 	else
 	{
 		SpeechRecPtr = NewObject<USpeechRecognizer>();
-		SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), LoginParams);
+		SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), FString());
 	}
 	
 }

@@ -76,6 +76,8 @@ private:
 
 public:
 	FSpeechRecognizeResultDelegate CallbackResult;
+	FString Language;
+	bool bAutoStop;
 private:
 
 	FGraphEventRef SpeechRecognizeCompletion[ETaskAction::ES_MAXSTATE];
@@ -86,4 +88,8 @@ private:
 	bool bLoginSuccessful;
 	bool bInitSuccessful;
 	bool bSpeeking;
+	bool bOnSpeechRecResultSuccesful;
+	bool bOnSpeechRecBeginSuccesful;
+	bool bOnSpeechRecEndSuccesful;
+	FString SpeechResultString;
 };
