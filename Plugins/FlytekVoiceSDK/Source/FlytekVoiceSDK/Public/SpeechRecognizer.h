@@ -4,7 +4,6 @@
 
 #include "Object.h"
 #include "Tickable.h"
-#include "FlytekVoiceSDK.h"
 #include "TaskGraphInterfaces.h"
 #include "SpeechRecognizer.generated.h"
 

@@ -6,7 +6,6 @@ public class FlytekVoiceSDK : ModuleRules
 {
     public FlytekVoiceSDK(TargetInfo Target)
     {
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicIncludePaths.AddRange(
             new string[] {
