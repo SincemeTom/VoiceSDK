@@ -72,7 +72,7 @@ public:
 	virtual int32 SpeechRecWriteAudioData() = 0;
 
 
-	virtual class USpeechRecognizer* InitializeSpeechRecognize(ESpeechLanguage InLanguage) = 0;
+	virtual class USpeechRecognizer* InitializeSpeechRecognize(ESpeechLanguage InLanguage, bool IsContinuous) = 0;
 
 	void ResetSpeechRecPtr() { SpeechRecPtr = nullptr; }
 
@@ -105,7 +105,7 @@ public:
 
 	virtual int32 SpeechRecWriteAudioData() override;
 
-	virtual class USpeechRecognizer* InitializeSpeechRecognize(ESpeechLanguage InLanguage) override;
+	virtual class USpeechRecognizer* InitializeSpeechRecognize(ESpeechLanguage InLanguage, bool IsContinuous) override;
 private:
 	//class USpeechRecognizer* SpeechRecPtr = nullptr;
 	void* DllHandle;

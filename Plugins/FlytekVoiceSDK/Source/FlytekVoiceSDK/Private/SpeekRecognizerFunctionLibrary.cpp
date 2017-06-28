@@ -4,9 +4,9 @@
 #include "FlytekVoiceSDK.h"
 
 
-USpeechRecognizer* USpeekRecognizerFunctionLibrary::InitializeSpeechRecognizer(ESpeechLanguage InLanguage)
+USpeechRecognizer* USpeekRecognizerFunctionLibrary::InitializeSpeechRecognizer(ESpeechLanguage InLanguage, bool IsContinuous)
 {
-	return IFlytekVoiceSDK::Get().InitializeSpeechRecognize(InLanguage);
+	return IFlytekVoiceSDK::Get().InitializeSpeechRecognize(InLanguage,IsContinuous);
 }
 void USpeekRecognizerFunctionLibrary::StartLisening()
 {

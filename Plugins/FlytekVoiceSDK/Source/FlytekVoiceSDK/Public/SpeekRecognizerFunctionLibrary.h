@@ -18,7 +18,7 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
-	static class USpeechRecognizer* InitializeSpeechRecognizer(ESpeechLanguage InLanguage);
+	static class USpeechRecognizer* InitializeSpeechRecognizer(ESpeechLanguage InLanguage, bool IsContinuous);
 
 	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
 	static void StartLisening();

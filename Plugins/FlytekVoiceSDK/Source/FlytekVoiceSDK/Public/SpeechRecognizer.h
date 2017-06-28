@@ -60,7 +60,7 @@ public:
 
 	void OnSpeechRecEnd(int reason);
 	
-	void SetParams(ESpeechLanguage InLanguage);
+	void SetParams(ESpeechLanguage InLanguage, bool IsContinuous);
 
 
 private:
@@ -81,7 +81,7 @@ private:
 	//CallBack
 	void HandleOnLoginResult();
 
-
+	void ResetSpeechRecognizer();
 public:
 	UPROPERTY(BlueprintAssignable, Category = SpeechRec)
 	FOnSpeechRecognizeResult SpeeckResult;
@@ -91,7 +91,9 @@ public:
 	
 	bool bAutoStop;
 	bool bLoginSuccessful;
+	bool bContinuous;
 protected:
+	bool bContinuousSpeeking;
 	ESpeechLanguage SRLanguage;
 	FString Session_Begin_Param;
 	FGraphEventRef SpeechRecognizeCompletion[ETaskAction::ES_MAXSTATE];

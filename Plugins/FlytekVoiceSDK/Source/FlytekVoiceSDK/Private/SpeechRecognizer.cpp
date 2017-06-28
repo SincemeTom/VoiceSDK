@@ -47,6 +47,7 @@ extern "C"
 
 USpeechRecognizer::USpeechRecognizer()
 {
+	bContinuous = true;
 	SRLanguage = ESpeechLanguage::EL_Chinese;
 	Session_Begin_Param = TEXT("sub = iat, domain = iat, ptt = 0, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf8, vad_enable  = 1, vad_eos = 1000");
 
@@ -56,7 +57,7 @@ USpeechRecognizer::USpeechRecognizer()
 	}
 	pSpeechRecognizer = this;
 	bLoginSuccessful = false;
-	bAutoStop = false;
+	
 }
 USpeechRecognizer::~USpeechRecognizer()
 {
@@ -68,13 +69,22 @@ USpeechRecognizer::~USpeechRecognizer()
 	CallSRUninit();
 	CallSRLogout();	
 }
-
+void USpeechRecognizer::ResetSpeechRecognizer()
+{
+	bSpeeking = false;
+	bOnSpeechRecBeginSuccesful = false;
+	bOnSpeechRecEndSuccesful = false;
+	bOnSpeechRecResultSuccesful = false;
+	bContinuousSpeeking = false;
+}
 void USpeechRecognizer::PostInitProperties()
 {
 	Super::PostInitProperties();
 }
-void USpeechRecognizer::SetParams(ESpeechLanguage InLanguage)
+void USpeechRecognizer::SetParams(ESpeechLanguage InLanguage, bool IsContinuous)
 {
+	ResetSpeechRecognizer();
+	bContinuous = IsContinuous;
 	SRLanguage = InLanguage;
 	Session_Begin_Param = FString::Printf(TEXT("sub = iat, domain = iat, ptt = 0, language = %s, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf8, vad_enable  = 1, vad_eos = 1000")
 		, (SRLanguage == ESpeechLanguage::EL_Chinese)?LANGUAGE_CHINESE:LANGUAGE_ENGLISH);
@@ -110,7 +120,7 @@ void USpeechRecognizer::Tick(float DeltaTime)
 					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech!"))
 				}
 				else if (ErrorResult[ES_STARTLISTENING] != -1)
-				{
+				{				
 					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech faild! Error Code :%d"), ErrorResult[ES_STARTLISTENING])
 				}
 				ErrorResult[ES_STARTLISTENING] = -1;
@@ -119,6 +129,8 @@ void USpeechRecognizer::Tick(float DeltaTime)
 			{
 				if (ErrorResult[ES_STOPLISTENING] == 0)
 				{
+					bOnSpeechRecEndSuccesful = true;
+					bContinuousSpeeking = false;
 					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Stop Speech!"))
 				}
 				else if (ErrorResult[ES_STOPLISTENING] != -1)
@@ -139,6 +151,19 @@ void USpeechRecognizer::Tick(float DeltaTime)
 		SpeeckResult.Broadcast(SpeechResultString);
 		SpeechResultString = NULL;
 		bOnSpeechRecResultSuccesful = false;
+	}
+	
+	if (bOnSpeechRecEndSuccesful)
+	{
+		bOnSpeechRecEndSuccesful = false;
+		bSpeeking = false;
+		if (bContinuous)
+		{
+			if (bContinuousSpeeking)
+			{
+				SpeechRecStartListeningRequest();
+			}
+		}
 	}
 }
 bool USpeechRecognizer::IsTickable() const
@@ -191,6 +216,16 @@ void USpeechRecognizer::SpeechRecStartListeningRequest()
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  must init first ! "));
 		return;
 	}
+	if (bSpeeking)
+	{
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  Speeking now! "));
+		return;
+	}
+	bSpeeking = true;
+	if (bContinuous)
+	{
+		bContinuousSpeeking = true;
+	}
 	SpeechRecognizeCompletion[ETaskAction::ES_STARTLISTENING] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRStartListening, SPEECH_THREAD);
 }
 
@@ -204,6 +239,11 @@ void USpeechRecognizer::SpeechRecStopListeningRequest()
 	if (!bInitSuccessful)
 	{
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  must init first ! "));
+		return;
+	}
+	if (!bSpeeking)
+	{
+		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  dont need to stop "));
 		return;
 	}
 	SpeechRecognizeCompletion[ETaskAction::ES_STOPLISTENING] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRStopListening, SPEECH_THREAD);
@@ -284,7 +324,6 @@ void USpeechRecognizer::OnSpeechRecResult(const char* result, char is_last)
 	{
 		if (is_last)
 		{
-			bSpeeking = false;
 			UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Last words"), *SpeechResultStr);
 			bOnSpeechRecResultSuccesful = true;
 		}
@@ -296,7 +335,6 @@ void USpeechRecognizer::OnSpeechRecResult(const char* result, char is_last)
 void USpeechRecognizer::OnSpeechRecBegin()
 {
 	FScopeLock ScopeLock1(&AccessLock);
-	bSpeeking = true;
 	UE_LOG(LogFlytekVoiceSDK, Log, TEXT("OnSpeechRecBegin"));
 	bOnSpeechRecBeginSuccesful = true;
 
@@ -305,16 +343,15 @@ void USpeechRecognizer::OnSpeechRecEnd(int reason)
 {
 	FScopeLock ScopeLock1(&AccessLock);
 	if (reason == END_REASON_VAD_DETECT)
-	{
-		bSpeeking = false;
+	{	
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Speeking Done"));
-		bOnSpeechRecEndSuccesful = true;
 	}
 	else
 	{
-		bSpeeking = false;
 		UE_LOG(LogFlytekVoiceSDK, Error, TEXT("On Speech Recognizer Error : %d"), reason)
+			
 	}
+	bOnSpeechRecEndSuccesful = true;
 
 }
 
