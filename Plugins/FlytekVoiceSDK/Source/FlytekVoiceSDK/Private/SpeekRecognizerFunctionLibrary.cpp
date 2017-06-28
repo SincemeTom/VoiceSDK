@@ -4,15 +4,9 @@
 #include "FlytekVoiceSDK.h"
 
 
-
-void USpeekRecognizerFunctionLibrary::MSRLogin(const FString& Params)
+USpeechRecognizer* USpeekRecognizerFunctionLibrary::InitializeSpeechRecognizer(ESpeechLanguage InLanguage)
 {
-	IFlytekVoiceSDK::Get().VoiceSDKLogin(FString(), FString(), Params);
-}
-
-void USpeekRecognizerFunctionLibrary::MSRInit()
-{
-	IFlytekVoiceSDK::Get().SpeechRecInit();
+	return IFlytekVoiceSDK::Get().InitializeSpeechRecognize(InLanguage);
 }
 void USpeekRecognizerFunctionLibrary::StartLisening()
 {

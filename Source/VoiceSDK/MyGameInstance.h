@@ -8,6 +8,7 @@
 /**
  * 
  */
+
 UCLASS()
 class VOICESDK_API UMyGameInstance : public UGameInstance
 {

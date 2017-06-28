@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "SpeechRecognizer.h"
 #include "SpeekRecognizerFunctionLibrary.generated.h"
 
 /**
@@ -14,11 +15,10 @@ class FLYTEKVOICESDK_API USpeekRecognizerFunctionLibrary : public UBlueprintFunc
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
-	static void MSRLogin(const FString& Params);
+
 
 	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
-	static void MSRInit();
+	static class USpeechRecognizer* InitializeSpeechRecognizer(ESpeechLanguage InLanguage);
 
 	UFUNCTION(BlueprintCallable, Category = SpeekRecognizer)
 	static void StartLisening();

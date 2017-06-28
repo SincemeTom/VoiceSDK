@@ -24,7 +24,12 @@ enum ETaskAction
 	ES_MAXSTATE
 };
 
-UCLASS()
+DECLARE_MULTICAST_DELEGATE_OneParam(FSpeechRecognizeResultDelegate, const FString&);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpeechRecognizeResult, const FString&, ResultText);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInitializeResult, int32, ErrorCode);
+
+
+UCLASS(BlueprintType)
 class FLYTEKVOICESDK_API USpeechRecognizer : public UObject, public FTickableGameObject
 {
 	GENERATED_BODY()
@@ -54,6 +59,9 @@ public:
 	void OnSpeechRecBegin();
 
 	void OnSpeechRecEnd(int reason);
+	
+	void SetParams(ESpeechLanguage InLanguage);
+
 
 private:
 
@@ -75,17 +83,22 @@ private:
 
 
 public:
+	UPROPERTY(BlueprintAssignable, Category = SpeechRec)
+	FOnSpeechRecognizeResult SpeeckResult;
+	UPROPERTY(BlueprintAssignable, Category = SpeechRec)
+	FOnInitializeResult InitResult;
 	FSpeechRecognizeResultDelegate CallbackResult;
-	FString Language;
+	
 	bool bAutoStop;
-private:
-
+	bool bLoginSuccessful;
+protected:
+	ESpeechLanguage SRLanguage;
+	FString Session_Begin_Param;
 	FGraphEventRef SpeechRecognizeCompletion[ETaskAction::ES_MAXSTATE];
 	FCriticalSection AccessLock;
 	int32 ErrorResult[ETaskAction::ES_MAXSTATE];
 	struct speech_rec SpeechRec;
 	struct speech_rec_notifier RecNotifier;
-	bool bLoginSuccessful;
 	bool bInitSuccessful;
 	bool bSpeeking;
 	bool bOnSpeechRecResultSuccesful;

@@ -88,14 +88,27 @@ void FFlytekVoiceSDKModule::ShutdownModule()
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("%s"), TEXT("FlytekVoice Module Shutdown"));
 	}
 }
-USpeechRecognizer* FFlytekVoiceSDKModule::InitializeSpeechRecognize()
+USpeechRecognizer* FFlytekVoiceSDKModule::InitializeSpeechRecognize(ESpeechLanguage InLanguage)
 {
 	if (!SpeechRecPtr)
 	{
-		SpeechRecPtr = NewObject<USpeechRecognizer>();
+		SpeechRecPtr = NewObject<USpeechRecognizer>();	
+		SpeechRecPtr->SetParams(InLanguage);
 		SpeechRecPtr->AddToRoot();
+		SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), FString());
 	}
-	SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), FString());
+	else 
+	{
+		SpeechRecPtr->SetParams(InLanguage);
+		if (!SpeechRecPtr->bLoginSuccessful)
+		{
+			SpeechRecPtr->SpeechRecLoginRequest(FString(), FString(), FString());
+		}
+		else
+		{
+			SpeechRecPtr->SpeechRecInitRequest();
+		}
+	}
 	return SpeechRecPtr;
 }
 

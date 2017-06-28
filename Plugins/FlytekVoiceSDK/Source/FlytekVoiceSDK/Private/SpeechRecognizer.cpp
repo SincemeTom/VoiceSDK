@@ -6,13 +6,10 @@
 #include "SpeechRecognizeTask.h"
 
 
-#define  LANGUAGE_ENGLISH TEXT("en_us");
-#define  LANGUAGE_CHINESE TEXT("zh_ch");
+#define  LANGUAGE_ENGLISH TEXT("en_us")
+#define  LANGUAGE_CHINESE TEXT("zh_cn")
 
-const FString Session_Begin_Param = TEXT("sub = iat, domain = iat, language = en_us, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8");
-//const FString Session_Begin_Param = FString::Printf(TEXT("sub = asr, domain = asr, language = %s, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf-8")
-//	, TEXT("zh_ch"));
-
+//Flytek appid
 const FString LoginParam = TEXT("appid = 58d087b0, work_dir = .");
 
 #define SPEECH_THREAD TEXT("SpeechThread")
@@ -50,6 +47,9 @@ extern "C"
 
 USpeechRecognizer::USpeechRecognizer()
 {
+	SRLanguage = ESpeechLanguage::EL_Chinese;
+	Session_Begin_Param = TEXT("sub = iat, domain = iat, ptt = 0, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf8, vad_enable  = 1, vad_eos = 1000");
+
 	for (int32 i = 0; i <= ES_MAXSTATE; ++i)
 	{
 		ErrorResult[i] = -1;
@@ -57,7 +57,6 @@ USpeechRecognizer::USpeechRecognizer()
 	pSpeechRecognizer = this;
 	bLoginSuccessful = false;
 	bAutoStop = false;
-	//SpeechRecLoginRequest(FString(), FString(), LoginParam);
 }
 USpeechRecognizer::~USpeechRecognizer()
 {
@@ -73,6 +72,12 @@ USpeechRecognizer::~USpeechRecognizer()
 void USpeechRecognizer::PostInitProperties()
 {
 	Super::PostInitProperties();
+}
+void USpeechRecognizer::SetParams(ESpeechLanguage InLanguage)
+{
+	SRLanguage = InLanguage;
+	Session_Begin_Param = FString::Printf(TEXT("sub = iat, domain = iat, ptt = 0, language = %s, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf8, vad_enable  = 1, vad_eos = 1000")
+		, (SRLanguage == ESpeechLanguage::EL_Chinese)?LANGUAGE_CHINESE:LANGUAGE_ENGLISH);
 }
 void USpeechRecognizer::Tick(float DeltaTime)
 {
@@ -96,6 +101,7 @@ void USpeechRecognizer::Tick(float DeltaTime)
 				{
 					bInitSuccessful = true;
 				}
+				InitResult.Broadcast(ErrorResult[ES_INIT]);
 			}
 			else if (i == ETaskAction::ES_STARTLISTENING)
 			{
@@ -130,6 +136,7 @@ void USpeechRecognizer::Tick(float DeltaTime)
 	if (bOnSpeechRecResultSuccesful)
 	{
 		CallbackResult.Broadcast(SpeechResultString);
+		SpeeckResult.Broadcast(SpeechResultString);
 		SpeechResultString = NULL;
 		bOnSpeechRecResultSuccesful = false;
 	}
@@ -165,11 +172,6 @@ void USpeechRecognizer::SpeechRecLogoutRequest()
 }
 void USpeechRecognizer::SpeechRecInitRequest()
 {
-	if (bInitSuccessful)
-	{
-		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK has already Init Successful ! "));
-		return;
-	}
 	SpeechRecognizeCompletion[ETaskAction::ES_INIT] = TGraphTask<FSpeechRecognizeTask>::CreateTask(NULL, ENamedThreads::GameThread).ConstructAndDispatchWhenReady(this, &USpeechRecognizer::CallSRInit, SPEECH_THREAD);
 }
 void USpeechRecognizer::SpeechRecUninitRequest()
@@ -183,10 +185,6 @@ void USpeechRecognizer::SpeechRecStartListeningRequest()
 	{
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("VoiceSDK  must Login first ! "));
 		return;
-	}
-	else
-	{
-		//SpeechRecLoginRequest(FString(), FString(), LoginParam);
 	}
 	if (!bInitSuccessful)
 	{
@@ -225,7 +223,7 @@ void USpeechRecognizer::CallSRLogout()
 
 int32 USpeechRecognizer::CallSRInit()
 {
-	FScopeLock ScopeLock1(&AccessLock);
+	
 	RecNotifier = {
 		OnSpeechResult,
 		OnSpeechBeginResult,
@@ -238,7 +236,7 @@ int32 USpeechRecognizer::CallSRInit()
 }
 int32 USpeechRecognizer::CallSRUninit()
 {
-	FScopeLock ScopeLock1(&AccessLock);
+	
 	int32 ret = -1;
 	if (bInitSuccessful)
 	{
@@ -251,7 +249,7 @@ int32 USpeechRecognizer::CallSRUninit()
 
 int32 USpeechRecognizer::CallSRStartListening()
 {
-	FScopeLock ScopeLock1(&AccessLock);
+	
 	if (bInitSuccessful)
 	{
 		ErrorResult[ES_STARTLISTENING] = sr_start_listening(&SpeechRec);
@@ -266,7 +264,7 @@ int32 USpeechRecognizer::CallSRStartListening()
 
 int32 USpeechRecognizer::CallSRStopListening()
 {
-	FScopeLock ScopeLock1(&AccessLock);
+	
 	if (bInitSuccessful)
 	{
 		ErrorResult[ES_STOPLISTENING] = sr_stop_listening(&SpeechRec);

@@ -4,16 +4,19 @@
 
 #include "ModuleManager.h"
 #include "ModuleInterface.h"
+#include "EngineMinimal.h"
 #include "speech_recognizer.h"
-
-
-DECLARE_MULTICAST_DELEGATE_OneParam(FSpeechRecognizeResultDelegate, const FString&);
 
 
 struct speech_rec;
 struct speech_rec_notifier;
 DECLARE_LOG_CATEGORY_EXTERN(LogFlytekVoiceSDK, Verbose, All);
-
+UENUM(BlueprintType)
+enum class ESpeechLanguage : uint8
+{
+	EL_Chinese,
+	EL_English
+};
 class IFlytekVoiceSDK : public IModuleInterface
 {
 
@@ -69,7 +72,7 @@ public:
 	virtual int32 SpeechRecWriteAudioData() = 0;
 
 
-	virtual class USpeechRecognizer* InitializeSpeechRecognize() = 0;
+	virtual class USpeechRecognizer* InitializeSpeechRecognize(ESpeechLanguage InLanguage) = 0;
 
 	void ResetSpeechRecPtr() { SpeechRecPtr = nullptr; }
 
@@ -102,7 +105,7 @@ public:
 
 	virtual int32 SpeechRecWriteAudioData() override;
 
-	virtual class USpeechRecognizer* InitializeSpeechRecognize() override;
+	virtual class USpeechRecognizer* InitializeSpeechRecognize(ESpeechLanguage InLanguage) override;
 private:
 	//class USpeechRecognizer* SpeechRecPtr = nullptr;
 	void* DllHandle;
