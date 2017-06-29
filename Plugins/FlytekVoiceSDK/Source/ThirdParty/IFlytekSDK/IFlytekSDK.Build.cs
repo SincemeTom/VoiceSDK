@@ -30,28 +30,11 @@ public class IFlytekSDK : ModuleRules
             PublicLibraryPaths.Add(Path.Combine(ModuleDirectory, "lib"));
             PublicAdditionalLibraries.Add("iat_record_sample.lib");
 
-            string IFlytekrecordSDKDllName = "iat_record_sample.dll";
-            // Delay-load the DLL, so we can load it from the right place first
-            PublicDelayLoadDLLs.Add(IFlytekrecordSDKDllName);
-
-            string RecordBasePath = System.IO.Path.Combine(ModuleDirectory, "../../../Binaries/ThirdParty/IFlytekSDK", "Win64");
-            string IFlytekrecordSDKDllPath = System.IO.Path.Combine(RecordBasePath, IFlytekrecordSDKDllName);
-
-            RuntimeDependencies.Add(new RuntimeDependency(IFlytekrecordSDKDllPath));
+           
         }
         else if (Target.Platform == UnrealTargetPlatform.Win32)
 		{
-			// // Add the import library
-			// PublicLibraryPaths.Add(Path.Combine(ModuleDirectory, "lib"));
-			// PublicAdditionalLibraries.Add("xdinputexp.lib");
-
-			// string XdInputDllName = "xdinputexp.dll";
-			// // Delay-load the DLL, so we can load it from the right place first
-			// PublicDelayLoadDLLs.Add(XdInputDllName);
 			
-			// string BasePath = System.IO.Path.Combine(ModuleDirectory, "../../../Binaries/ThirdParty/IFlytekSDK", "Win32");
-			// string XdInputDllPath = System.IO.Path.Combine(BasePath, XdInputDllName);
-			// RuntimeDependencies.Add(new RuntimeDependency(XdInputDllPath));
 		}
 	}
 }
