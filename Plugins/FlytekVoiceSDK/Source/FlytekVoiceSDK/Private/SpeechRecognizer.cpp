@@ -73,6 +73,7 @@ USpeechRecognizer::~USpeechRecognizer()
 void USpeechRecognizer::ResetSpeechRecognizer()
 {
 	bSpeeking = false;
+	bInitSuccessful = false;
 	bOnSpeechRecBeginSuccesful = false;
 	bOnSpeechRecEndSuccesful = false;
 	bOnSpeechRecResultSuccesful = false;
