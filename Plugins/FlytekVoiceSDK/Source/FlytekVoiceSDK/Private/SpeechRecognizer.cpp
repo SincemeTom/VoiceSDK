@@ -122,7 +122,19 @@ void USpeechRecognizer::Tick(float DeltaTime)
 				}
 				else if (ErrorResult[ES_STARTLISTENING] != -1)
 				{				
-					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech faild! Error Code :%d"), ErrorResult[ES_STARTLISTENING])
+					UE_LOG(LogFlytekVoiceSDK, Log, TEXT("Start Speech faild! Error Code :%d"), ErrorResult[ES_STARTLISTENING]);
+					if (bSpeeking)
+					{
+						bSpeeking = false;
+					}					
+					if (bContinuous)
+					{
+						if (bContinuousSpeeking)
+						{
+							bContinuousSpeeking = false;
+							SpeechRecStartListeningRequest();
+						}						
+					}
 				}
 				ErrorResult[ES_STARTLISTENING] = -1;
 			}
