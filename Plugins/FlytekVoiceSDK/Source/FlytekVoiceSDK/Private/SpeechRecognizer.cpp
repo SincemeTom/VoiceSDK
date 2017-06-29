@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlytekVoiceSDKPrivatePCH.h"
-#include "SpeechRecognizer.h"
+//#include "SpeechRecognizer.h"
 #include "FlytekVoiceSDK.h"
 #include "ScopeLock.h"
 #include "SpeechRecognizeTask.h"
@@ -127,14 +127,14 @@ void USpeechRecognizer::Tick(float DeltaTime)
 					if (bSpeeking)
 					{
 						bSpeeking = false;
-					}					
+					}
 					if (bContinuous)
 					{
 						if (bContinuousSpeeking)
 						{
 							bContinuousSpeeking = false;
 							SpeechRecStartListeningRequest();
-						}						
+						}
 					}
 				}
 				ErrorResult[ES_STARTLISTENING] = -1;

@@ -2,7 +2,7 @@
 
 #include "FlytekVoiceSDKPrivatePCH.h"
 #include "SpeekRecognizerFunctionLibrary.h"
-#include "FlytekVoiceSDK.h"
+//#include "FlytekVoiceSDK.h"
 
 
 USpeechRecognizer* USpeekRecognizerFunctionLibrary::InitializeSpeechRecognizer(ESpeechLanguage InLanguage, bool IsContinuous)

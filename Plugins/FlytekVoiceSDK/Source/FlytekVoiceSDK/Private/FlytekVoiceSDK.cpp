@@ -34,7 +34,6 @@ void FFlytekVoiceSDKModule::StartupModule()
 	{
 		UE_LOG(LogFlytekVoiceSDK, Log, TEXT("%s"), TEXT("FlytekVoice Module Started"));
 	}
-#if 1
 	// Get the base directory of this plugin
 	FString BaseDir = IPluginManager::Get().FindPlugin("FlytekVoiceSDK")->GetBaseDir();
 
@@ -50,15 +49,7 @@ void FFlytekVoiceSDKModule::StartupModule()
 
 
 	// Add on the relative location of the third party dll and load it
-	FString DllLibraryPath;
-#if PLATFORM_WINDOWS
-#if PLATFORM_64BITS
-	
-	//DllLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/iat_record_sample.dll"));
-#else
-	//DllLibraryPath = FPaths::Combine(*BaseDir, TEXT("Binaries/ThirdParty/IFlytekSDK/Win64/iat_record_sample.dll"));
-#endif
-#endif
+
 
 	DllHandle = !MSCLibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*MSCLibraryPath) : nullptr;
 
@@ -69,9 +60,7 @@ void FFlytekVoiceSDKModule::StartupModule()
 	else
 	{
 		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("ThirdPartyLibraryError", "Failed to load iat_record_sample third party library"));
-	}
-
-#endif	
+	}	
 }
 
 void FFlytekVoiceSDKModule::ShutdownModule()

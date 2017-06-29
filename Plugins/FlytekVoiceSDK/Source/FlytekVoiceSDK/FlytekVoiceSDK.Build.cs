@@ -5,7 +5,7 @@ using UnrealBuildTool;
 public class FlytekVoiceSDK : ModuleRules
 {
     public FlytekVoiceSDK(TargetInfo Target)
-    {
+    {     
 
         PublicIncludePaths.AddRange(
             new string[] {
@@ -38,21 +38,10 @@ public class FlytekVoiceSDK : ModuleRules
             {
                 "CoreUObject",
                 "Engine",
-                "Slate",
-                "SlateCore",
-                "UMG",
-                "Projects",
-                "NetworkReplayStreaming",
+                "Projects"
 				// ... add private dependencies that you statically link with here ...	
 			}
             );
 
-
-        DynamicallyLoadedModuleNames.AddRange(
-            new string[]
-            {
-                //"LevelSequence",
-            }
-            );
     }
 }
