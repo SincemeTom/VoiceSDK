@@ -1,6 +1,6 @@
 // Copyright 2016 Gamemakin LLC. All Rights Reserved.
 
-
+#include "FlytekVoiceSDKPrivatePCH.h"
 #include "FlytekVoiceSDK.h"
 #include "Paths.h"
 #include "IPluginManager.h"

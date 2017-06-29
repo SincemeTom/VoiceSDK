@@ -14,6 +14,16 @@
 		{
 			"Name": "FlytekVoiceSDK",
 			"Enabled": true
+		},
+		{
+			"Name": "Linter",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/5817c0a8a435471484f23e223ad5c9f5"
+		},
+		{
+			"Name": "LowEntryXmlParser",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/5ac057200f49458f8ff82cb771ca23b6"
 		}
 	],
 	"TargetPlatforms": [
